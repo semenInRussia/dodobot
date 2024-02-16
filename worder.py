@@ -6,7 +6,7 @@ MAX_WORD_LEN = 6
 
 words = set()
 
-with open("words.txt", "r") as f:
+with open("dict.txt", "r") as f:
     words = set(map(str.strip, f))
 
 
@@ -42,48 +42,62 @@ class Path:
         return Path(first=self.first, rest=self.rest + [d])
 
 
-def search(table: list[str]) -> list[str]:
-    paths = []
+_checked_words: set[str] = set()
+_used: list[list[bool]] = []
+_table: list[str] = []
+_paths: list[Path] = []
+
+
+def search(table: list[str]) -> list[Path]:
+    global _checked_words, _used, _table, _paths
+
+    _checked_words = set()
+    _paths = []
+    _table = table
+
     for i in range(n):
         for j in range(n):
+            _used = [[False] * n] * n
             _dfs(
-                table,
-                paths,
                 i,
                 j,
                 path=Path(first=(i, j), rest=[]),
-                used=[[False] * n] * n,
                 word="",
             )
 
-    return paths
+    return _paths
 
 
 def _dfs(
-    table: list[str],
-    paths: list[Path],
     i: int,
     j: int,
     path: Path,
-    used: list[list[bool]],
     word: str,
 ):
+    global _checked_words, _used, _table, _paths
+
     if i < 0 or i >= n or j < 0 or j >= n:
         return
-    if used[i][j]:
+    if _used[i][j]:
         return
 
-    used[i][j] = True
-    word += table[i][j]
+    _used[i][j] = True
+    word += _table[i][j]
 
-    if word in words and len(word) > 1:
-        paths.append(path)
-        print("Yes", word)
+    if word in words and len(word) > 1 and word not in _checked_words:
+        _paths.append(path)
+        _checked_words.add(word)
 
     if len(word) == MAX_WORD_LEN:
         return
 
     for d, (di, dj) in dirs:
-        _dfs(table, paths, i + di, j + dj, path.add(d), used, word)
+        _dfs(i + di, j + dj, path=path.add(d), word=word)
 
-    used[i][j] = False
+    _used[i][j] = False
+
+
+if __name__ == "__main__":
+    search(["ьреот", "нпнар", "банка", "тиднф", "йнато"])
+    for w in _checked_words:
+        print(w)
