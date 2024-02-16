@@ -3,6 +3,7 @@ import pytesseract
 from PIL import Image
 
 filename = "./screen.png"
+Color = tuple[int, int, int, int]
 
 
 def _chunks(lst, n):
@@ -29,18 +30,27 @@ BLACK = (0, 0, 0, 255)
 
 
 def _cvt_img(img: Image.Image):
-    print("start")
+    img = _crop_2color_img(img, TEXT_COLOR)
+    img = _only_text(img, TEXT_COLOR, BLACK, WHITE)
+
+    return img
+
+
+def _only_text(img: Image.Image, txt: Color, fg: Color, bg: Color) -> Image.Image:
+    a = np.array(img)
+    r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
+    msk = (r == txt[0]) & (g == txt[1]) & (b == txt[2])
+
+    a[:, :, :][msk] = fg
+    a[:, :, :][~msk] = bg
+
+    return Image.fromarray(a)
+
+
+def _crop_2color_img(img: Image.Image, fg: Color) -> Image.Image:
     w, h = img.size
+    a = img.load()  # array
 
-    # fill text from table with black, other white
-    for i in range(w):
-        for j in range(h):
-            if img.getpixel((i, j)) == TEXT_COLOR:
-                img.putpixel((i, j), BLACK)
-            else:
-                img.putpixel((i, j), WHITE)
-
-    # find min col and row where table text is started, defaults to
     # maximum possible
     beg_col = w
     beg_row = h
@@ -52,7 +62,7 @@ def _cvt_img(img: Image.Image):
 
     for y in range(h):
         for x in range(w):
-            if img.getpixel((x, y)) == BLACK:
+            if a[x, y] == fg:
                 beg_col = min(beg_col, x)
                 beg_row = min(beg_row, y)
                 end_col = max(end_col, x)
@@ -60,19 +70,15 @@ def _cvt_img(img: Image.Image):
 
     # beg col is where the first table pixel, make it on 3 pixels lefter
     # the same for other bounds
-    pad = 30  # padding of text in image
+    pad = 0  # padding of text in image
     beg_col = max(0, beg_col - pad)
     beg_row = max(0, beg_row - pad)
     end_col = min(w - 1, end_col + pad)
     end_row = min(h - 1, end_row + pad)
 
-    img = img.crop((beg_col, beg_row, end_col, end_row))
-
-    print("end")
-
-    return img
+    return img.crop((beg_col, beg_row, end_col, end_row))
 
 
 if __name__ == "__main__":
-    # print(extract_table(Image.open(filename), show=True))
-    print(extract_table(Image.open("./testdata/s1.png"), show=True))
+    print(extract_table(Image.open(filename), show=True))
+    # print(extract_table(Image.open("./testdata/s1.png"), show=True))
