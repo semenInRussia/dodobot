@@ -43,7 +43,7 @@ class Path:
 
 
 _checked_words: set[str] = set()
-_used: list[list[bool]] = []
+_used: list[list[bool]] = [[False] * n] * n
 _table: list[str] = []
 _paths: list[Path] = []
 
@@ -57,23 +57,24 @@ def search(table: list[str]) -> list[Path]:
 
     for i in range(n):
         for j in range(n):
-            _used = [[False] * n] * n
-            _dfs(
-                i,
-                j,
-                path=Path(first=(i, j), rest=[]),
-                word="",
-            )
+            path = Path(first=(i, j), rest=[])
+            _fill_matrix(_used, False)
+            _dfs(i, j, path=path, word="")
 
     return _paths
 
 
-def _dfs(
-    i: int,
-    j: int,
-    path: Path,
-    word: str,
-):
+# inplace
+def _fill_matrix(m: list[list], val):
+    if not m:
+        return
+
+    for i in range(len(m)):
+        for j in range(len(m[0])):
+            m[i][j] = val
+
+
+def _dfs(i: int, j: int, path: Path, word: str):
     global _checked_words, _used, _table, _paths
 
     if i < 0 or i >= n or j < 0 or j >= n:
@@ -98,6 +99,15 @@ def _dfs(
 
 
 if __name__ == "__main__":
-    search(["ьреот", "нпнар", "банка", "тиднф", "йнато"])
-    for w in _checked_words:
-        print(w)
+    search(
+        [
+            "ьреот",
+            "нпнар",
+            "банка",
+            "тиднф",
+            "йнато",
+        ]
+    )
+
+    for i, w in enumerate(_checked_words):
+        print(f"{i+1}. ", w)
