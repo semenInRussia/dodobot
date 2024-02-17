@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 n = 5
-MAX_WORD_LEN = 6
+MAX_WORD_LEN = 5
 
 words = set()
 
@@ -43,7 +43,7 @@ class Path:
 
 
 _checked_words: set[str] = set()
-_used: list[list[bool]] = [[False] * n] * n
+_used: list[list[bool]] = [[False for _ in range(n)] for _ in range(n)]
 _table: list[str] = []
 _paths: list[Path] = []
 
@@ -64,8 +64,35 @@ def search(table: list[str], show=False) -> list[Path]:
     if show:
         for w in _checked_words:
             print(w)
+        nwords = len(_checked_words)
+        print(f"I found {nwords} words")
 
     return _paths
+
+
+def _dfs(i: int, j: int, path: Path, word: str):
+    global _checked_words, _used, _table, _paths
+
+    if i < 0 or i >= n or j < 0 or j >= n:
+        return
+    if _used[i][j]:
+        return
+
+    word += _table[i][j]
+
+    if word in words and len(word) > 1 and word not in _checked_words:
+        _paths.append(path)
+        _checked_words.add(word)
+
+    if len(word) == MAX_WORD_LEN:
+        return
+
+    _used[i][j] = True
+
+    for d, (di, dj) in dirs:
+        _dfs(i + di, j + dj, path=path.add(d), word=word)
+
+    _used[i][j] = False
 
 
 # inplace
@@ -78,40 +105,7 @@ def _fill_matrix(m: list[list], val):
             m[i][j] = val
 
 
-def _dfs(i: int, j: int, path: Path, word: str):
-    global _checked_words, _used, _table, _paths
-
-    if i < 0 or i >= n or j < 0 or j >= n:
-        return
-    if _used[i][j]:
-        return
-
-    _used[i][j] = True
-    word += _table[i][j]
-
-    if word in words and len(word) > 1 and word not in _checked_words:
-        _paths.append(path)
-        _checked_words.add(word)
-
-    if len(word) == MAX_WORD_LEN:
-        return
-
-    for d, (di, dj) in dirs:
-        _dfs(i + di, j + dj, path=path.add(d), word=word)
-
-    _used[i][j] = False
-
-
 if __name__ == "__main__":
-    search(
-        [
-            "ьреот",
-            "нпнар",
-            "банка",
-            "тиднф",
-            "йнато",
-        ]
-    )
-
-    for i, w in enumerate(_checked_words):
-        print(f"{i+1}. ", w)
+    tbl = ["бвгде", "ёзилм", "журка", "нопст", "фхцшщ"]
+    path = Path(first=(0, 1), rest=[])
+    search(tbl, show=True)
