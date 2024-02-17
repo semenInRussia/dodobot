@@ -48,7 +48,7 @@ _table: list[str] = []
 _paths: list[Path] = []
 
 
-def search(table: list[str]) -> list[Path]:
+def search(table: list[str], show=False) -> list[Path]:
     global _checked_words, _used, _table, _paths
 
     _checked_words = set()
@@ -60,6 +60,10 @@ def search(table: list[str]) -> list[Path]:
             path = Path(first=(i, j), rest=[])
             _fill_matrix(_used, False)
             _dfs(i, j, path=path, word="")
+
+    if show:
+        for w in _checked_words:
+            print(w)
 
     return _paths
 
