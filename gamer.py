@@ -30,4 +30,6 @@ def _print_table(table: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    print_words(show=_show)
+    while True:
+        print_words(show=_show)
+        _ = input("press enter to start me to found words from screen")
