@@ -16,7 +16,7 @@ N = 5
 
 def cvt_img(img: Image.Image):
     img = img.convert(mode="RGBA")
-    img = _crop_region_with_color(img, [TEXT_COLOR])
+    img = _crop_region_with_color(img, TEXT_COLOR)
     img = _only_text(img, TEXT_COLOR, BLACK, WHITE)
     img = _add_padding(img, 30, WHITE)
 
@@ -43,18 +43,27 @@ def _add_padding(img: Image.Image, pad: int, bg: Color) -> Image.Image:
     return padded
 
 
-def _crop_region_with_color(img: Image.Image, colors: list[Color]) -> Image.Image:
-    w, h = img.size
-    x0, y0, x1, y1 = w, h, 0, 0
-    for x in range(w):
-        for y in range(h):
-            if img.getpixel((x, y)) in colors:
-                x0 = min(x, x0)
-                y0 = min(y, y0)
-                x1 = max(x, x1)
-                y1 = max(y, y1)
+def _crop_region_with_color(img: Image.Image, color: Color) -> Image.Image:
+    a = np.array(img)
+    r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
+    msk = (r == color[0]) & (g == color[1]) & (b == color[2])
+
+    x0 = np.min(_remove_zeros(msk.argmax(axis=1)))
+    y0 = np.min(_remove_zeros(msk.argmax(axis=0)))
+    x1 = max(map(_argmax_nonzero, msk))
+    y1 = max(map(_argmax_nonzero, msk.T))
 
     return img.crop((x0, y0, x1, y1))
+
+
+def _argmax_nonzero(arr: np.ndarray, default: int = -1) -> int:
+    if arr.any():
+        return int(np.max(arr.nonzero()))
+    return default
+
+
+def _remove_zeros(arr: np.ndarray) -> np.ndarray:
+    return arr[arr != 0]
 
 
 # 62*5*x + 10*4*x = w
