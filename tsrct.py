@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 
 from photo import cvt_img
+from worder import n
 
 filename = "./screen.png"
 
@@ -15,10 +16,11 @@ def extract_table(img: Image.Image, show=False) -> list[str]:
     if show:
         img.show()
 
-    text = _extract_text(img)
-    text = text.replace(" ", "").replace("\n", "").lower()
+    txt = _extract_text(img)
+    txt = txt.replace(" ", "").replace("\n", "").lower()
+    txt += (n * n - len(txt)) * "."
 
-    return list(_chunks(text, 5))
+    return list(_chunks(txt, 5))
 
 
 def _chunks(lst, n):
