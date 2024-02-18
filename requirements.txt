@@ -1,4 +1,11 @@
+# read a text from image
 easyocr
-numpy
+
+# autoclicker
+pyautogui
+
+# work with images (of course)
 pillow
+
+# screenshots
 mss
