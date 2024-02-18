@@ -11,15 +11,30 @@ with open("dict.txt", "r") as f:
 
 Point = tuple[int, int]
 
+"""
+This is a list of deltas for the current point to the next possible point.
+
+Every element is a tuple from two values:
+
+- the first is a change of `i`: a table row
+- the second is a change of `j`: a table column
+
+Rows are numbered from the top to bottom.  Columns are numbered from
+the left to right, so the delta (-1, -1) is the delta for up-left movement.
+
+NOTE: that here straight movements are prefered over diag movements.
+"""
 _deltas: list[Point] = [
-    (-1, -1),
-    (-1, 0),
-    (-1, +1),
-    (0, +1),
-    (+1, +1),
-    (+1, 0),
-    (+1, -1),
-    (0, -1),
+    # straight movements
+    (-1, 0),  # up
+    (+1, 0),  # down
+    (0, -1),  # left
+    (0, +1),  # right
+    # diag movements
+    (+1, -1),  # down-left
+    (-1, -1),  # up-left
+    (-1, +1),  # up-right
+    (+1, +1),  # down-right
 ]
 
 
