@@ -1,3 +1,4 @@
+import random
 from dataclasses import dataclass
 
 n = 5
@@ -5,9 +6,14 @@ MAX_WORD_LEN = 5
 
 words = set()
 
-with open("dict.txt", "r") as f:
-    words = set(map(str.strip, f))
 
+def sync_words_with_dict(path="dict.txt"):
+    global words
+    with open(path, "r") as f:
+        words = set(map(str.strip, f))
+
+
+sync_words_with_dict()
 
 Point = tuple[int, int]
 
@@ -26,10 +32,10 @@ NOTE: that here straight movements are prefered over diag movements.
 """
 _deltas: list[Point] = [
     # straight movements
-    (-1, 0),  # up
-    (+1, 0),  # down
     (0, -1),  # left
     (0, +1),  # right
+    (-1, 0),  # up
+    (+1, 0),  # down
     # diag movements
     (+1, -1),  # down-left
     (-1, -1),  # up-left
@@ -53,7 +59,7 @@ _table: list[str] = []
 _paths: list[WordPath] = []
 
 
-def search(table: list[str], show=False) -> list[WordPath]:
+def search(table: list[str], show=False, shuffle=False) -> list[WordPath]:
     global _checked_words, _used, _table, _paths
 
     _checked_words = set()
@@ -66,13 +72,20 @@ def search(table: list[str], show=False) -> list[WordPath]:
             _fill_matrix(_used, False)
             _dfs(i, j, path=path, word="")
 
+    if shuffle:
+        random.shuffle(_paths)
+
     if show:
-        for w in _checked_words:
-            print(w)
-        nwords = len(_checked_words)
-        print(f"I found {nwords} words")
+        _show_checked_words()
 
     return _paths
+
+
+def _show_checked_words():
+    for w in _checked_words:
+        print(w)
+        nwords = len(_checked_words)
+        print(f"I found {nwords} words")
 
 
 def _dfs(i: int, j: int, path: WordPath, word: str):
