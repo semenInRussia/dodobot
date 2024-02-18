@@ -32,6 +32,13 @@ class Gamer:
             self._press_word(p)
 
     @property
+    def table(self) -> list[str]:
+        """Return the content of a table at the screen."""
+        if self._table is None:
+            self._extract_table()
+        return self._table  # type: ignore
+
+    @property
     def table_box(self) -> Box:
         """Return the box of a letter table at the screen."""
         if self._table_box is None:
@@ -43,13 +50,6 @@ class Gamer:
         """Return the position where a table at the screen is started."""
         x0, y0, _, _ = self.table_box
         return x0, y0
-
-    @property
-    def table(self) -> list[str]:
-        """Return the content of a table at the screen."""
-        if self._table is None:
-            self._extract_table()
-        return self._table  # type: ignore
 
     def _extract_table(self) -> None:
         """Extract from the screen a letter table and return nothing.
