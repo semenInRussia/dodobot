@@ -1,4 +1,5 @@
 import random
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 n = 5
@@ -51,6 +52,12 @@ class WordPath:
 
     def add(self, d: Point):
         return WordPath(first=self.first, rest=self.rest + [d])
+
+
+def random_5letters_words() -> Iterator[str]:
+    for wrd in words:
+        if len(wrd) == 5:
+            yield wrd
 
 
 _checked_words: set[str] = set()
