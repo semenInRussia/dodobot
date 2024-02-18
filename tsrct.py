@@ -2,7 +2,7 @@ import easyocr
 import numpy as np
 from PIL import Image
 
-from photo import cvt_img
+from photo import normalize_table_image
 from worder import n
 
 filename = "./screen.png"
@@ -11,7 +11,7 @@ _reader = easyocr.Reader(["ru"])
 
 
 def extract_table(img: Image.Image, show=False) -> list[str]:
-    img = cvt_img(img)
+    img = normalize_table_image(img)
 
     if show:
         img.show()

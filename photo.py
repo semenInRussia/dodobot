@@ -1,7 +1,8 @@
 from collections.abc import Iterator
 
 import numpy as np
-from PIL import Image, ImageOps
+from cv2 import norm
+from PIL import Image
 
 Color = tuple[int, int, int, int]
 
@@ -14,9 +15,14 @@ BLACK = (0, 0, 0, 255)
 N = 5
 
 
-def cvt_img(img: Image.Image):
-    img = img.convert(mode="RGBA")
-    img = _crop_region_with_color(img, TEXT_COLOR)
+Box = tuple[int, int, int, int]
+
+
+def extract_table_image(img: Image.Image) -> tuple[Box, Image.Image]:
+    return _crop_region_with_color(img, TEXT_COLOR)
+
+
+def normalize_table_image(img: Image.Image):
     img = _only_text(img, TEXT_COLOR, BLACK, WHITE)
     img = _add_padding(img, 30, WHITE)
 
@@ -24,12 +30,13 @@ def cvt_img(img: Image.Image):
 
 
 def _only_text(img: Image.Image, txt: Color, fg: Color, bg: Color) -> Image.Image:
+    img = img.convert(mode="RGB")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
     msk = (r == txt[0]) & (g == txt[1]) & (b == txt[2])
 
-    a[:, :, :][msk] = fg
-    a[:, :, :][~msk] = bg
+    a[:, :, :][msk] = fg[:3]
+    a[:, :, :][~msk] = bg[:3]
 
     return Image.fromarray(a)
 
@@ -43,7 +50,8 @@ def _add_padding(img: Image.Image, pad: int, bg: Color) -> Image.Image:
     return padded
 
 
-def _crop_region_with_color(img: Image.Image, color: Color) -> Image.Image:
+def _crop_region_with_color(img: Image.Image, color: Color) -> tuple[Box, Image.Image]:
+    img = img.convert(mode="RGB")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
     msk = (r == color[0]) & (g == color[1]) & (b == color[2])
@@ -53,7 +61,9 @@ def _crop_region_with_color(img: Image.Image, color: Color) -> Image.Image:
     x1 = max(map(_argmax_nonzero, msk))
     y1 = max(map(_argmax_nonzero, msk.T))
 
-    return img.crop((x0, y0, x1, y1))
+    box = x0, y0, x1, y1
+
+    return box, img.crop(box)
 
 
 def _argmax_nonzero(arr: np.ndarray, default: int = -1) -> int:
@@ -72,6 +82,7 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
 
 if __name__ == "__main__":
     img = Image.open("monitor-1.png")
-    img = cvt_img(img)
+    _, img = extract_table_image(img)
+    img = normalize_table_image(img)
 
     img.show()
