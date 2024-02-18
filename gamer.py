@@ -4,7 +4,9 @@ from PIL import Image
 from photo import Box, extract_table_image
 from screener import screen
 from tsrct import extract_table
-from worder import WordPath, n, search
+from worder import WordPath, n, search, sync_words_with_dict
+
+DURATION = 0.2
 
 
 class Gamer:
@@ -19,9 +21,13 @@ class Gamer:
         self._table = None
         self._table_box = None
 
+    def fill(self) -> None:
+        """Fill an empty table at the screen with letters"""
+        pass
+
     def press_all_table_words(self) -> None:
         print("all words pressing")
-        paths = search(self.table)
+        paths = search(self.table, shuffle=True)
         for p in paths:
             self._press_word(p)
 
@@ -31,6 +37,12 @@ class Gamer:
         if self._table_box is None:
             self._extract_table()
         return self._table_box  # type: ignore
+
+    @property
+    def table_start(self) -> tuple[int, int]:
+        """Return the position where a table at the screen is started."""
+        x0, y0, _, _ = self.table_box
+        return x0, y0
 
     @property
     def table(self) -> list[str]:
@@ -64,26 +76,40 @@ class Gamer:
         x0, y0, x1, y1 = self.table_box
         return x1 - x0, y1 - y0
 
+    def _move_cursor_to_cell(self, i: int, j: int) -> None:
+        hsz, vsz = self._cell_sizes
+        x0, y0 = self.table_start
+        pg.moveTo(x0 + j * hsz, y0 + i * vsz, duration=DURATION)
+
     def _press_word(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
         print("press a word")
-        duration = 0.2
-        w, h = self.table_image_size
-        x0, y0, _, _ = self.table_box
-        hsz = int(1.2 * (w / n))
-        vsz = int(1.2 * (h / n))
         i, j = path.first
-        pg.moveTo(x0 + j * hsz, y0 + i * vsz, duration=duration)
+        self._move_cursor_to_cell(i, j)
         pg.click()
         pg.mouseDown()
         for i, j in path.rest:
-            pg.moveTo(x0 + j * hsz, y0 + i * vsz, duration=duration)
+            self._move_cursor_to_cell(i, j)
         pg.mouseUp()
+
+    @property
+    def _cell_sizes(self) -> tuple[int, int]:
+        """Get a tuple from table cell sizes.
+
+        The first element is horizontal size, the second is vertical"""
+        w, h = self.table_image_size
+        k = 1.2  # is choosen randomly
+        hsz = int(k * (w / n))
+        vsz = int(k * (h / n))
+        return hsz, vsz
 
 
 if __name__ == "__main__":
     gamer = Gamer()
     while True:
-        _ = input('press Enter to new "auto-gaming"')
-        gamer.reset()
-        gamer.press_all_table_words()
+        act = input('press Enter to new "auto-gaming"')
+        if act == "dict":
+            sync_words_with_dict()
+        else:
+            gamer.reset()
+            gamer.press_all_table_words()
