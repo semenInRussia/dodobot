@@ -1,6 +1,3 @@
-import functools
-import itertools
-
 import pyautogui as pg
 from PIL import Image
 
@@ -24,6 +21,16 @@ class Gamer:
     _table: list[str] | None = None
     _table_box: Box | None = None
     _screen: Image.Image | None = None
+
+    def play_round1(self):
+        self.reset()
+        self.fill()
+        self.reset()
+        self.press_all_table_words()
+
+    def play_round2(self):
+        self.reset()
+        self.press_all_table_words()
 
     def reset(self) -> None:
         """Mark some variables as non-actual"""
@@ -129,11 +136,22 @@ class Gamer:
 if __name__ == "__main__":
     gamer = Gamer()
     while True:
-        act = input('press Enter to new "auto-gaming"')
+        act = input(
+            """
+                    press anything:
+                      1 - auto-playing 1st round
+                      2 - auto-playing 2nd round
+                      q - exit this shell
+                      dict - sync the dict.txt file
+                    """
+        )
         if act == "dict":
             sync_words_with_dict()
-        if act == "q":
+        elif act == "q":
             break
+        elif act == "1":
+            gamer.play_round1()
+        elif act == "2":
+            gamer.play_round2()
         else:
-            gamer.reset()
-            gamer.press_all_table_words()
+            print("do nothing")
