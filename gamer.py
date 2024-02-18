@@ -1,18 +1,29 @@
+import functools
+import itertools
+
 import pyautogui as pg
 from PIL import Image
 
 from photo import Box, extract_table_image
 from screener import screen
 from tsrct import extract_table
-from worder import WordPath, n, search, sync_words_with_dict
+from worder import WordPath, n, random_5letters_words, search, sync_words_with_dict
 
 DURATION = 0.2
 
+rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю"
+eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
+_rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
+
+
+def _press_rus_char(ch: str) -> None:
+    pg.press(_rus_to_eng.get(ch, ""))
+
 
 class Gamer:
-    _table: list[str] | None
-    _table_box: Box | None
-    _screen: Image.Image | None
+    _table: list[str] | None = None
+    _table_box: Box | None = None
+    _screen: Image.Image | None = None
 
     def reset(self) -> None:
         """Mark some variables as non-actual"""
@@ -23,7 +34,13 @@ class Gamer:
 
     def fill(self) -> None:
         """Fill an empty table at the screen with letters"""
-        pass
+        wrds = random_5letters_words()
+        for i in range(n):
+            wrd = next(wrds)
+            for j, ch in enumerate(wrd):
+                self._move_cursor_to_cell(i, j)
+                pg.click()
+                _press_rus_char(ch)
 
     def press_all_table_words(self) -> None:
         print("all words pressing")
@@ -79,6 +96,11 @@ class Gamer:
     def _move_cursor_to_cell(self, i: int, j: int) -> None:
         hsz, vsz = self._cell_sizes
         x0, y0 = self.table_start
+        w, h = self.table_image_size
+        if i == 0:
+            y0 += (w / 5) * 0.2
+        if j == 0:
+            x0 += (h / 5) * 0.2
         pg.moveTo(x0 + j * hsz, y0 + i * vsz, duration=DURATION)
 
     def _press_word(self, path: WordPath):
@@ -110,6 +132,8 @@ if __name__ == "__main__":
         act = input('press Enter to new "auto-gaming"')
         if act == "dict":
             sync_words_with_dict()
+        if act == "q":
+            break
         else:
             gamer.reset()
             gamer.press_all_table_words()
