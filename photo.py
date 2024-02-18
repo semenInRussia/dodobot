@@ -85,10 +85,6 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
     return arr[arr != 0]
 
 
-# 62*5*x + 10*4*x = w
-# 310x + 40x = w
-# x = 350
-
 if __name__ == "__main__":
     filename = sys.argv[1]
     img = Image.open(filename)
