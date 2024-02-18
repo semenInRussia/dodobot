@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Iterator
 
 import numpy as np
@@ -19,7 +20,7 @@ Box = tuple[int, int, int, int]
 
 
 def extract_table_image(img: Image.Image) -> tuple[Box, Image.Image]:
-    return _crop_region_with_color(img, TEXT_COLOR)
+    return _crop_region_with_colors(img, [TEXT_COLOR, TABLE_BG])
 
 
 def normalize_table_image(img: Image.Image):
@@ -50,11 +51,19 @@ def _add_padding(img: Image.Image, pad: int, bg: Color) -> Image.Image:
     return padded
 
 
-def _crop_region_with_color(img: Image.Image, color: Color) -> tuple[Box, Image.Image]:
+def _crop_region_with_colors(
+    img: Image.Image, colors: list[Color]
+) -> tuple[Box, Image.Image]:
+    """Find the biggest image region which contains all pixels with
+    the given colors.
+
+    Return the tuple from box (left, upper, right, down) and image"""
     img = img.convert(mode="RGB")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
-    msk = (r == color[0]) & (g == color[1]) & (b == color[2])
+    msk = np.zeros_like(r)
+    for col in colors:
+        msk |= (r == col[0]) & (g == col[1]) & (b == col[2])
 
     x0 = np.min(_remove_zeros(msk.argmax(axis=1)))
     y0 = np.min(_remove_zeros(msk.argmax(axis=0)))
@@ -81,7 +90,8 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
 # x = 350
 
 if __name__ == "__main__":
-    img = Image.open("monitor-1.png")
+    filename = sys.argv[1]
+    img = Image.open(filename)
     _, img = extract_table_image(img)
     img = normalize_table_image(img)
 
