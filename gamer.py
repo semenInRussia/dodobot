@@ -1,7 +1,8 @@
 import pyautogui as pg
 from PIL import Image
 
-from photo import Box, extract_table_image
+import clicklib
+from photo import Rect, extract_table_image
 from screener import screen
 from tsrct import extract_table
 from worder import WordPath, n, random_5letters_words, search, sync_words_with_dict
@@ -12,6 +13,8 @@ rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю
 eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
 _rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
 
+_wrds = random_5letters_words
+
 
 def _press_rus_char(ch: str) -> None:
     pg.press(_rus_to_eng.get(ch, ""))
@@ -19,8 +22,11 @@ def _press_rus_char(ch: str) -> None:
 
 class Gamer:
     _table: list[str] | None = None
-    _table_box: Box | None = None
+    _table_box: Rect | None = None
     _screen: Image.Image | None = None
+
+    def __init__(self):
+        self.reset()
 
     def play_round1(self):
         self.reset()
@@ -41,12 +47,11 @@ class Gamer:
 
     def fill(self) -> None:
         """Fill an empty table at the screen with letters"""
-        wrds = random_5letters_words()
         for i in range(n):
-            wrd = next(wrds)
+            wrd = next(_wrds)
             for j, ch in enumerate(wrd):
                 self._move_cursor_to_cell(i, j)
-                pg.click()
+                clicklib.click()
                 _press_rus_char(ch)
 
     def press_all_table_words(self) -> None:
@@ -63,7 +68,7 @@ class Gamer:
         return self._table  # type: ignore
 
     @property
-    def table_box(self) -> Box:
+    def table_box(self) -> Rect:
         """Return the box of a letter table at the screen."""
         if self._table_box is None:
             self._extract_table()
@@ -80,8 +85,13 @@ class Gamer:
 
         Save the result into the respective variables."""
         print("extract table")
-        self._table_box, img = extract_table_image(self.screen)
+
+        self._table_box = extract_table_image(self.screen)
+        img = self.screen.crop(self._table_box)
         self._table = extract_table(img)
+
+        for row in self._table:
+            print(row)
 
     @property
     def screen(self) -> Image.Image:
@@ -105,21 +115,23 @@ class Gamer:
         x0, y0 = self.table_start
         w, h = self.table_image_size
         if i == 0:
-            y0 += (w / 5) * 0.2
+            y0 += (w / n) * 0.2
         if j == 0:
-            x0 += (h / 5) * 0.2
-        pg.moveTo(x0 + j * hsz, y0 + i * vsz, duration=DURATION)
+            x0 += (h / n) * 0.2
+        # pg.moveTo(x0 + j * hsz, y0 + i * vsz, duration=DURATION)
+        x0, y0 = int(x0), int(y0)
+        clicklib.move(x0 + j * hsz, y0 + i * vsz, duration=DURATION)
 
     def _press_word(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
         print("press a word")
         i, j = path.first
         self._move_cursor_to_cell(i, j)
-        pg.click()
-        pg.mouseDown()
+        clicklib.click()
+        clicklib.mouse_down()
         for i, j in path.rest:
             self._move_cursor_to_cell(i, j)
-        pg.mouseUp()
+        clicklib.mouse_up()
 
     @property
     def _cell_sizes(self) -> tuple[int, int]:

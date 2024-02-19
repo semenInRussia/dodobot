@@ -1,10 +1,10 @@
+import itertools
 import random
 from collections.abc import Iterator
 from dataclasses import dataclass
 
 n = 5
 MAX_WORD_LEN = 5
-
 words = set()
 
 
@@ -54,10 +54,13 @@ class WordPath:
         return WordPath(first=self.first, rest=self.rest + [d])
 
 
-def random_5letters_words() -> Iterator[str]:
+def _random_5letters_words() -> Iterator[str]:
     for wrd in words:
         if len(wrd) == 5:
             yield wrd
+
+
+random_5letters_words = itertools.cycle(_random_5letters_words())
 
 
 _checked_words: set[str] = set()

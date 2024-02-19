@@ -16,10 +16,10 @@ BLACK = (0, 0, 0, 255)
 N = 5
 
 
-Box = tuple[int, int, int, int]
+Rect = tuple[int, int, int, int]
 
 
-def extract_table_image(img: Image.Image) -> tuple[Box, Image.Image]:
+def extract_table_image(img: Image.Image) -> Rect:
     return _crop_region_with_colors(img, [TEXT_COLOR, TABLE_BG])
 
 
@@ -51,16 +51,16 @@ def _add_padding(img: Image.Image, pad: int, bg: Color) -> Image.Image:
     return padded
 
 
-def _crop_region_with_colors(
-    img: Image.Image, colors: list[Color]
-) -> tuple[Box, Image.Image]:
+def _crop_region_with_colors(img: Image.Image, colors: list[Color]) -> Rect:
     """Find the biggest image region which contains all pixels with
     the given colors.
 
-    Return the tuple from box (left, upper, right, down) and image"""
+    Return the tuple (left, upper, right, down) of this image"""
+
     img = img.convert(mode="RGB")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
+
     msk = np.zeros_like(r)
     for col in colors:
         msk |= (r == col[0]) & (g == col[1]) & (b == col[2])
@@ -70,9 +70,7 @@ def _crop_region_with_colors(
     x1 = max(map(_argmax_nonzero, msk))
     y1 = max(map(_argmax_nonzero, msk.T))
 
-    box = x0, y0, x1, y1
-
-    return box, img.crop(box)
+    return x0, y0, x1, y1
 
 
 def _argmax_nonzero(arr: np.ndarray, default: int = -1) -> int:
