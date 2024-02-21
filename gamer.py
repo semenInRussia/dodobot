@@ -2,6 +2,7 @@ import pyautogui as pg
 from PIL import Image
 
 import clicklib
+import photo
 from photo import Rect, extract_table_image
 from screener import screen
 from tsrct import extract_table
@@ -13,7 +14,12 @@ rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю
 eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
 _rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
 
-_wrds = random_5letters_words
+
+def _is_good_start_word(w: str) -> bool:
+    return "ь" not in w and "ё" not in w
+
+
+_wrds = filter(_is_good_start_word, random_5letters_words)
 
 
 def _press_rus_char(ch: str) -> None:
@@ -124,7 +130,7 @@ class Gamer:
 
     def _press_word(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
-        print("press a word")
+        print(f"press a word ({len(path)})")
         i, j = path.first
         self._move_cursor_to_cell(i, j)
         clicklib.click()
@@ -149,13 +155,12 @@ if __name__ == "__main__":
     gamer = Gamer()
     while True:
         act = input(
-            """
-                    press anything:
-                      1 - auto-playing 1st round
-                      2 - auto-playing 2nd round
-                      q - exit this shell
-                      dict - sync the dict.txt file
-                    """
+            """ press anything:
+ 1 - auto-playing 1st round
+ 2 - auto-playing 2nd round
+ q - exit this shell
+ dict - sync the dict.txt file:dict.txt:
+ :"""
         )
         if act == "dict":
             sync_words_with_dict()
@@ -165,5 +170,9 @@ if __name__ == "__main__":
             gamer.play_round1()
         elif act == "2":
             gamer.play_round2()
+        elif act == "show":
+            box = extract_table_image(gamer.screen)
+            img = gamer.screen.crop(box)
+            photo.normalize_table_image(img).show()
         else:
             print("do nothing")
