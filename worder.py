@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 
 n = 5
-MAX_WORD_LEN = 5
+MAX_WORD_LEN = 7
 words = set()
 
 
@@ -50,6 +50,9 @@ class WordPath:
     first: Point
     rest: list[Point]
 
+    def __len__(self):
+        return len(self.rest) + 1
+
     def add(self, d: Point):
         return WordPath(first=self.first, rest=self.rest + [d])
 
@@ -94,8 +97,8 @@ def search(table: list[str], show=False, shuffle=False) -> list[WordPath]:
 def _show_checked_words():
     for w in _checked_words:
         print(w)
-        nwords = len(_checked_words)
-        print(f"I found {nwords} words")
+    nwords = len(_checked_words)
+    print(f"I found {nwords} words")
 
 
 def _dfs(i: int, j: int, path: WordPath, word: str):
