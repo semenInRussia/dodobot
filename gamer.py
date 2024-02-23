@@ -198,14 +198,12 @@ class Gamer:
     def _move_cursor_to_cell(self, i: int, j: int) -> None:
         hsz, vsz = self._cell_sizes
         x0, y0 = self.table_start
-        w, h = self.table_image_size
-        if i == 0:
-            y0 += (w / n) * 0.2
-        if j == 0:
-            x0 += (h / n) * 0.2
-        # pg.moveTo(x0 + j * hsz, y0 + i * vsz, duration=DURATION)
-        x0, y0 = int(x0), int(y0)
-        clicklib.move(x0 + j * hsz, y0 + i * vsz, duration=DURATION)
+        # w, h = self.table_image_size
+        clicklib.move(
+            int(x0 + (j + 0.5) * hsz),
+            int(y0 + (i + 0.5) * vsz),
+            duration=DURATION,
+        )
 
     def _press_word(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
@@ -223,7 +221,8 @@ class Gamer:
 
         The first element is horizontal size, the second is vertical"""
         w, h = self.table_image_size
-        k = 1.2  # is chosen randomly
+        # k = 1.2  # is chosen randomly
+        k = 1
         hsz = int(k * (w / n))
         vsz = int(k * (h / n))
         return hsz, vsz
