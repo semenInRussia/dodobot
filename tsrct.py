@@ -36,6 +36,7 @@ def _extract_text(img: Image.Image) -> str:
         txt.replace("0", "о")
         .replace("₽", "р")
         .replace("€", "с")
+        .replace("%", "х")
         .replace("1", "пу")
         .replace("3", "з")
         .replace("4", "а")
