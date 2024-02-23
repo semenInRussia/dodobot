@@ -1,18 +1,37 @@
+import time
+from typing import Literal
+
 import pyautogui as pg
 from PIL import Image
 
 import clicklib
 import photo
+import regimg
 from photo import Rect, extract_table_image
 from screener import screen
 from tsrct import extract_table
 from worder import WordPath, n, random_5letters_words, search, sync_words_with_dict
 
 DURATION = 0.2
+EVENTS_SLEEP_TIME = 1
 
 rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю"
 eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
 _rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
+
+event = (
+    Literal["credits"]
+    | Literal["disconnect"]
+    | Literal["home"]
+    | Literal["playing"]
+    | Literal["round1help1"]
+    | Literal["round1help2"]
+    | Literal["roundend"]
+    | Literal["start"]
+    | Literal["who"]
+    | Literal["winner"]
+    | Literal["wordchoose"]
+)
 
 
 def _is_good_start_word(w: str) -> bool:
@@ -33,15 +52,24 @@ class Gamer:
 
     def __init__(self):
         self.reset()
+        clicklib.click()
+        clicklib.scroll(10)
+        clicklib.scroll(-1)
 
-    def play_round1(self):
-        self.reset()
+    def start(self):
+        while True:
+            time.sleep(EVENTS_SLEEP_TIME)
+            self.step()
+
+    def step(self) -> None:
+        p = regimg.predict(screen())
+        self._handle_regimg(p)
+
+    def play_round1(self) -> None:
         self.fill()
-        self.reset()
         self.press_all_table_words()
 
-    def play_round2(self):
-        self.reset()
+    def play_round2(self) -> None:
         self.press_all_table_words()
 
     def reset(self) -> None:
@@ -66,6 +94,32 @@ class Gamer:
         for p in paths:
             self._press_word(p)
 
+    def _handle_regimg(self, ri: regimg.RegImg):
+        ev: event = ri.name  # type: ignore
+
+        if ev in [
+            "disconnect",
+            "home",
+            "round1help1",
+            "round1help2",
+            "roundend",
+            "start",
+            "who",
+            "winner",
+            "wordchoose",
+        ]:
+            clicklib.click(ri.points[0])
+        elif ev == "round1help1":
+            clicklib.mouse_down()
+            pg.move(-100)
+            clicklib.mouse_up()
+        elif ev == "playing":
+            top_left = ri.points[0]
+            bottom_right = ri.points[1]
+            self.reset()
+            self._table_box = (*top_left, *bottom_right)
+            self.play_round1()
+
     @property
     def table(self) -> list[str]:
         """Return the content of a table at the screen."""
@@ -76,8 +130,7 @@ class Gamer:
     @property
     def table_box(self) -> Rect:
         """Return the box of a letter table at the screen."""
-        if self._table_box is None:
-            self._extract_table()
+        assert self._table_box != None
         return self._table_box  # type: ignore
 
     @property
@@ -92,8 +145,7 @@ class Gamer:
         Save the result into the respective variables."""
         print("extract table")
 
-        self._table_box = extract_table_image(self.screen)
-        img = self.screen.crop(self._table_box)
+        img = self.screen.crop(self.table_box)
         self._table = extract_table(img)
 
         for row in self._table:

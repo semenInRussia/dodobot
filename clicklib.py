@@ -1,7 +1,6 @@
 import pyautogui as _pg
-from numpy import select
 
-from gamer import DURATION
+scroll = _pg.scroll
 
 
 def click(
