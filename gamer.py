@@ -5,15 +5,14 @@ import pyautogui as pg
 from PIL import Image
 
 import clicklib
-import photo
 import regimg
-from photo import Rect, extract_table_image
+from photo import Rect
 from screener import screen
 from tsrct import extract_table
-from worder import WordPath, n, random_5letters_words, search, sync_words_with_dict
+from worder import WordPath, n, random_5letters_words, search
 
-DURATION = 0.2
-EVENTS_SLEEP_TIME = 1
+DURATION = 0.1
+EVENTS_SLEEP_TIME = 2
 
 rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю"
 eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
@@ -94,6 +93,14 @@ class Gamer:
 
         for p in last_cell_paths:
             self._press_word(p)
+
+        # mark all rows just for fun
+        for i in range(n):
+            self._move_cursor_to_cell(i, 0)
+            clicklib.click()
+            clicklib.mouse_down()
+            self._move_cursor_to_cell(i, n - 1)
+            clicklib.mouse_up()
 
     def play_round2(self) -> None:
         for p in search(self.table, shuffle=True):
@@ -228,28 +235,8 @@ class Gamer:
         return hsz, vsz
 
 
+g = None
 if __name__ == "__main__":
-    gamer = Gamer()
-    while True:
-        act = input(
-            """ press anything:
- 1 - auto-playing 1st round
- 2 - auto-playing 2nd round
- q - exit this shell
- dict - sync the dict.txt file:dict.txt:
- :"""
-        )
-        if act == "dict":
-            sync_words_with_dict()
-        elif act == "q":
-            break
-        elif act == "1":
-            gamer.play_round1()
-        elif act == "2":
-            gamer.play_round2()
-        elif act == "show":
-            box = extract_table_image(gamer.screen)
-            img = gamer.screen.crop(box)
-            photo.normalize_table_image(img).show()
-        else:
-            print("do nothing")
+    time.sleep(1)
+    g = Gamer()
+    g.start()
