@@ -49,6 +49,7 @@ class Gamer:
     _table: list[str] | None = None
     _table_box: Rect | None = None
     _screen: Image.Image | None = None
+    _prev_event: str | None
 
     def __init__(self):
         self.reset()
@@ -57,9 +58,15 @@ class Gamer:
         clicklib.scroll(-1)
 
     def start(self):
+        prev_is_playing = False
         while True:
             time.sleep(EVENTS_SLEEP_TIME)
-            self.step()
+            p = regimg.predict(screen())
+            if prev_is_playing and p.name == "playing":
+                # don't play twice at the same round
+                continue
+            prev_is_playing = p.name == "playing"
+            self._handle_regimg(p)
 
     def step(self) -> None:
         p = regimg.predict(screen())
@@ -67,10 +74,22 @@ class Gamer:
 
     def play_round1(self) -> None:
         self.fill()
-        self.press_all_table_words()
+        # self.press_all_table_words()
+        paths = search(self.table, shuffle=True)
+        last_cell = 0, 0  # cell which bot will visit the last
+        last_cell_paths = []
+        for p in paths:
+            if last_cell in p:
+                last_cell_paths.append(p)
+            else:
+                self._press_word(p)
+
+        for p in last_cell_paths:
+            self._press_word(p)
 
     def play_round2(self) -> None:
-        self.press_all_table_words()
+        for p in search(self.table, shuffle=True):
+            self._press_word(p)
 
     def reset(self) -> None:
         """Mark some variables as non-actual"""
@@ -183,11 +202,10 @@ class Gamer:
     def _press_word(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
         print(f"press a word ({len(path)})")
-        i, j = path.first
-        self._move_cursor_to_cell(i, j)
+        self._move_cursor_to_cell(*path[0])
         clicklib.click()
         clicklib.mouse_down()
-        for i, j in path.rest:
+        for i, j in path:
             self._move_cursor_to_cell(i, j)
         clicklib.mouse_up()
 

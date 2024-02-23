@@ -1,7 +1,6 @@
 import itertools
 import random
 from collections.abc import Iterator
-from dataclasses import dataclass
 
 n = 5
 MAX_WORD_LEN = 7
@@ -44,17 +43,7 @@ _deltas: list[Point] = [
     (+1, +1),  # down-right
 ]
 
-
-@dataclass
-class WordPath:
-    first: Point
-    rest: list[Point]
-
-    def __len__(self):
-        return len(self.rest) + 1
-
-    def add(self, d: Point):
-        return WordPath(first=self.first, rest=self.rest + [d])
+WordPath = list[Point]
 
 
 def _random_5letters_words() -> Iterator[str]:
@@ -81,7 +70,7 @@ def search(table: list[str], show=False, shuffle=False) -> list[WordPath]:
 
     for i in range(n):
         for j in range(n):
-            path = WordPath(first=(i, j), rest=[])
+            path = [(i, j)]
             _fill_matrix(_used, False)
             _dfs(i, j, path=path, word="")
 
@@ -121,7 +110,7 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
     _used[i][j] = True
 
     for di, dj in _deltas:
-        _dfs(i + di, j + dj, path=path.add((i + di, j + dj)), word=word)
+        _dfs(i + di, j + dj, path=path + [(i + di, j + dj)], word=word)
 
     _used[i][j] = False
 
@@ -144,7 +133,7 @@ if __name__ == "__main__":
         "нопст",
         "фхцшщ",
     ]
-    path = WordPath(first=(0, 1), rest=[])
+    path = [(0, 1)]
     paths = search(tbl, show=True)
     for p in paths:
         print(p)
