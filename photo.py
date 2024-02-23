@@ -1,11 +1,9 @@
-import sys
-from collections.abc import Iterator
+import os
 
 import numpy as np
-from cv2 import norm
 from PIL import Image
 
-Color = tuple[int, int, int, int]
+Color = tuple[int, int, int, int] | tuple[int, int, int]
 
 TEXT_COLOR = (26, 35, 37, 255)  # rgba
 TABLE_BG = (250, 172, 113, 255)
@@ -19,6 +17,11 @@ N = 5
 Rect = tuple[int, int, int, int]
 
 
+def extract_canvas_image(img: Image.Image) -> Rect:
+    cols = [(17, 27, 29), (238, 214, 177), (238, 214, 177), (34, 44, 46)]
+    return _crop_region_with_colors(img, cols)
+
+
 def extract_table_image(img: Image.Image) -> Rect:
     return _crop_region_with_colors(img, [TEXT_COLOR, TABLE_BG])
 
@@ -28,6 +31,14 @@ def normalize_table_image(img: Image.Image):
     img = _add_padding(img, 30, WHITE)
 
     return img.convert(mode="L")
+
+
+def is_color_exists(img: Image.Image, col) -> bool:
+    img = img.convert("RGB")
+    a = np.array(img)
+    r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
+    m = (r == col[0]) & (g == col[1]) & (b == col[2])
+    return m.any()
 
 
 def _only_text(img: Image.Image, txt: Color, fg: Color, bg: Color) -> Image.Image:
@@ -83,10 +94,21 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
     return arr[arr != 0]
 
 
-if __name__ == "__main__":
-    filename = sys.argv[1]
-    img = Image.open(filename)
-    _, img = extract_table_image(img)
-    img = normalize_table_image(img)
+# if __name__ == "__main__":
+#     filename = "monitor-1.png"
+#     img = Image.open(filename)
+#     box = extract_table_image(img)
+#     img = img.crop(box)
+#     img.show()
+#     img = normalize_table_image(img)
 
-    img.show()
+#     img.show()
+
+if __name__ == "__main__":
+    root = "regimgs/"
+    for filename in os.listdir(root):
+        if not filename.endswith(".png"):
+            continue
+        img = Image.open(root + filename)
+        box = extract_canvas_image(img)
+        img.crop(box).show()

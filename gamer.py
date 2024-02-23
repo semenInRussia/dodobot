@@ -145,7 +145,7 @@ class Gamer:
 
         The first element is horizontal size, the second is vertical"""
         w, h = self.table_image_size
-        k = 1.2  # is choosen randomly
+        k = 1.2  # is chosen randomly
         hsz = int(k * (w / n))
         vsz = int(k * (h / n))
         return hsz, vsz
