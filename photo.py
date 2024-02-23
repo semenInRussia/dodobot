@@ -94,16 +94,6 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
     return arr[arr != 0]
 
 
-# if __name__ == "__main__":
-#     filename = "monitor-1.png"
-#     img = Image.open(filename)
-#     box = extract_table_image(img)
-#     img = img.crop(box)
-#     img.show()
-#     img = normalize_table_image(img)
-
-#     img.show()
-
 if __name__ == "__main__":
     root = "regimgs/"
     for filename in os.listdir(root):

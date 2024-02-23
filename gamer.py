@@ -74,9 +74,17 @@ class Gamer:
 
     def play_round1(self) -> None:
         self.fill()
-        # self.press_all_table_words()
         paths = search(self.table, shuffle=True)
+
+        # in this game if you mark all symbols in the first round,
+        # then instantly after you mark the last symbol from table,
+        # you automatically end the round, so better at beginning mark
+        # all words which don't includes a cell, after mark all which
+        # includes (in the first round is one word, after which round
+        # will be end)
+
         last_cell = 0, 0  # cell which bot will visit the last
+
         last_cell_paths = []
         for p in paths:
             if last_cell in p:
