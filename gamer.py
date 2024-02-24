@@ -1,3 +1,4 @@
+import random
 import time
 from typing import Literal
 
@@ -9,10 +10,14 @@ import regimg
 from photo import Rect
 from screener import screen
 from tsrct import extract_table
-from worder import WordPath, n, random_5letters_words, search
+from worder import WordPath, n, random_5letters_words, search, sync_words_with_dict
 
 DURATION = 0.1
 EVENTS_SLEEP_TIME = 2
+RELOAD_PAGE_TIME = 60
+
+# the amount of time in second what bot will wait after the first round is end
+MAX_PLAYER_WAITING = 200
 
 rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю"
 eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
@@ -52,20 +57,42 @@ class Gamer:
 
     def __init__(self):
         self.reset()
+        self._rescroll()
+
+    @staticmethod
+    def _rescroll():
+        # w = pg.size().width
+        # h = pg.size().height
+        # clicklib.move(h // 2, w)
         clicklib.click()
         clicklib.scroll(10)
         clicklib.scroll(-1)
 
+    def restart(self):
+        pg.hotkey("ctrl", "r")
+        time.sleep(60)
+        self._rescroll()
+
     def start(self):
-        prev_is_playing = False
+        wait_player_time = 0
+        prev = None
+
         while True:
             time.sleep(EVENTS_SLEEP_TIME)
             p = regimg.predict(screen())
-            if prev_is_playing and p.name == "playing":
+
+            if prev == "playing" and p.name == "playing":
                 # don't play twice at the same round
                 continue
-            prev_is_playing = p.name == "playing"
+
+            wait_player_time += EVENTS_SLEEP_TIME
+            wait_player_time *= p.name == "rounded"
+            if wait_player_time > MAX_PLAYER_WAITING:
+                self.restart()
+                time.sleep(RELOAD_PAGE_TIME)
+
             self._handle_regimg(p)
+            prev = p.name
 
     def step(self) -> None:
         p = regimg.predict(screen())
@@ -134,7 +161,6 @@ class Gamer:
         if ev in [
             "disconnect",
             "home",
-            "round1help1",
             "round1help2",
             "roundend",
             "start",
@@ -145,7 +171,7 @@ class Gamer:
             clicklib.click(ri.points[0])
         elif ev == "round1help1":
             clicklib.mouse_down()
-            pg.move(-100)
+            pg.move(-200)
             clicklib.mouse_up()
         elif ev == "playing":
             top_left = ri.points[0]
@@ -153,6 +179,9 @@ class Gamer:
             self.reset()
             self._table_box = (*top_left, *bottom_right)
             self.play_round1()
+
+        if ev == "winner" and random.randint(0, 100) > 80:
+            sync_words_with_dict()
 
     @property
     def table(self) -> list[str]:
