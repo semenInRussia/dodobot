@@ -26,11 +26,11 @@ def trim_dict(path="dict.txt", sync_words=True) -> None:
 sync_words_with_dict()
 
 
-def save_word_to_dict(word: str, path="dict.txt", sync=True) -> None:
+def save_word_to_dict(word: str, path="dict.txt") -> None:
+    global words
+    words.add(word)
     with open(path, "a") as f:
         f.write(word + "\n")
-    if sync:
-        sync_words_with_dict(path=path)
 
 
 Point = tuple[int, int]

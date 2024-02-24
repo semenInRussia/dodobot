@@ -118,6 +118,8 @@ class Gamer:
 
     def play_round1(self) -> None:
         self.fill()
+        nwords = len(words)
+        print(f"search words (dict.size = {nwords})")
         paths = search(self.table, shuffle=True)
 
         # in this game if you mark all symbols in the first round,
@@ -208,7 +210,7 @@ class Gamer:
         if word != WORDCHOOSE_LABEL_TEXT:
             # gamer will sync the dict after winner with 30% change, so
             # now sync=False
-            save_word_to_dict(word, sync=False)
+            save_word_to_dict(word)
 
     @property
     def table(self) -> list[str]:
