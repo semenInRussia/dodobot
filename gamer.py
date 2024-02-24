@@ -137,9 +137,7 @@ class Gamer:
         for i in range(n):
             self._move_cursor_to_cell(i, 0)
             clicklib.click()
-            clicklib.mouse_down()
-            self._move_cursor_to_cell(i, n - 1)
-            clicklib.mouse_up()
+            pg.dragTo(self._move_cursor_to_cell(i, n - 1), duration=DURATION)
 
     def play_round2(self) -> None:
         for p in search(self.table, shuffle=True):
@@ -261,13 +259,14 @@ class Gamer:
         return x1 - x0, y1 - y0
 
     def _move_cursor_to_cell(self, i: int, j: int) -> None:
+        clicklib.move(*self._cell_position(i, j), duration=DURATION)
+
+    def _cell_position(self, i: int, j: int) -> tuple[int, int]:
         hsz, vsz = self._cell_sizes
         x0, y0 = self.table_start
-        # w, h = self.table_image_size
-        clicklib.move(
-            int(x0 + (j + 0.5) * hsz),
-            int(y0 + (i + 0.5) * vsz),
-            duration=DURATION,
+        return (
+            int(x0 + (j + 0.5) * hsz),  # x
+            int(y0 + (i + 0.5) * vsz),  # y
         )
 
     def _press_word(self, path: WordPath):
