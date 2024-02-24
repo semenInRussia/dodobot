@@ -7,13 +7,31 @@ MAX_WORD_LEN = 7
 words = set()
 
 
-def sync_words_with_dict(path="dict.txt"):
+def sync_words_with_dict(path="dict.txt") -> None:
     global words
     with open(path, "r") as f:
         words = set(map(str.strip, f))
 
 
+def trim_dict(path="dict.txt", sync_words=True) -> None:
+    if sync_words:
+        sync_words_with_dict(path)
+    s = ""
+    for w in words:
+        s += w + "\n"
+    with open(path, "w") as f:
+        f.write(s)
+
+
 sync_words_with_dict()
+
+
+def save_word_to_dict(word: str, path="dict.txt", sync=True) -> None:
+    with open(path, "a") as f:
+        f.write(word + "\n")
+    if sync:
+        sync_words_with_dict(path=path)
+
 
 Point = tuple[int, int]
 
