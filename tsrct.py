@@ -5,7 +5,7 @@ from PIL import Image
 from photo import Rect, normalize_table_image
 from worder import n
 
-filename = "./screen.png"
+filename = "monitor-1.png"
 
 _reader = easyocr.Reader(["ru"])
 
@@ -52,4 +52,3 @@ def _extract_text(img: Image.Image) -> str:
 
 if __name__ == "__main__":
     print(extract_table(Image.open(filename), show=True))
-    # print(extract_table(Image.open("./testdata/s1.png"), show=True))
