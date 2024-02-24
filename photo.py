@@ -28,7 +28,7 @@ def extract_table_image(img: Image.Image) -> Rect:
 
 def normalize_table_image(img: Image.Image):
     img = _only_text(img, TEXT_COLOR, BLACK, WHITE)
-    img = _add_padding(img, 30, WHITE)
+    img = _add_padding(img, 60, WHITE)
 
     return img.convert(mode="L")
 
