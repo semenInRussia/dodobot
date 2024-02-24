@@ -315,5 +315,7 @@ if __name__ == "__main__":
             g.start()
         except KeyboardInterrupt:
             break
+        except pg.FailSafeException:
+            _ = input("press Enter to continue")
         except:
             pass
