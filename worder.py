@@ -63,16 +63,6 @@ _deltas: list[Point] = [
 
 WordPath = list[Point]
 
-
-def _random_5letters_words() -> Iterator[str]:
-    for wrd in words:
-        if len(wrd) == 5:
-            yield wrd
-
-
-random_5letters_words = itertools.cycle(_random_5letters_words())
-
-
 _checked_words: set[str] = set()
 _used: list[list[bool]] = [[False for _ in range(n)] for _ in range(n)]
 _table: list[str] = []

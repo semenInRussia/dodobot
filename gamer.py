@@ -1,6 +1,5 @@
-import random
 import time
-from typing import Literal
+from typing import Iterable, Literal
 
 import pyautogui as pg
 from PIL import Image
@@ -13,12 +12,14 @@ from tsrct import extract_table, read_text_at_img_fragment
 from worder import (
     WordPath,
     n,
-    random_5letters_words,
     save_word_to_dict,
     search,
     sync_words_with_dict,
     trim_dict,
+    words,
 )
+
+SCROLL_POSITION = (1400, 600)
 
 DURATION = 0.1
 EVENTS_SLEEP_TIME = 2
@@ -48,11 +49,18 @@ event = (
 )
 
 
-def _is_good_start_word(w: str) -> bool:
-    return "ь" not in w and "ё" not in w
+def _is_ok_start_word(w: str) -> bool:
+    return len(w) == 5 and "ь" not in w and "ё" not in w
 
 
-_wrds = filter(_is_good_start_word, random_5letters_words)
+def start_words() -> Iterable[str]:
+    while True:
+        for wrd in words:
+            if _is_ok_start_word(wrd):
+                yield wrd
+
+
+_wrds = start_words()
 
 
 def _press_rus_char(ch: str) -> None:
@@ -71,14 +79,13 @@ class Gamer:
 
     @staticmethod
     def _rescroll():
-        # w = pg.size().width
-        # h = pg.size().height
-        # clicklib.move(h // 2, w)
+        clicklib.move(SCROLL_POSITION)
         clicklib.click()
         clicklib.scroll(10)
         clicklib.scroll(-1)
 
     def restart(self):
+        self.reset()
         pg.hotkey("ctrl", "r")
         time.sleep(60)
         self._rescroll()
@@ -88,10 +95,9 @@ class Gamer:
         prev = None
 
         while True:
+            self.reset()
             time.sleep(EVENTS_SLEEP_TIME)
-            self._make_screen()
-            assert self._screen is not None
-            p = regimg.predict(self._screen)
+            p = regimg.predict(self.screen)
 
             if prev == "playing" and p.name == "playing":
                 # don't play twice at the same round
@@ -103,7 +109,7 @@ class Gamer:
                 self.restart()
                 time.sleep(RELOAD_PAGE_TIME)
 
-            self._handle_regimg(p, self._screen)
+            self._handle_regimg(p, self.screen)
             prev = p.name
 
     def step(self) -> None:
@@ -132,12 +138,6 @@ class Gamer:
 
         for p in last_cell_paths:
             self._press_word(p)
-
-        # mark all rows just for fun
-        for i in range(n):
-            self._move_cursor_to_cell(i, 0)
-            clicklib.click()
-            pg.dragTo(self._move_cursor_to_cell(i, n - 1), duration=DURATION)
 
     def play_round2(self) -> None:
         for p in search(self.table, shuffle=True):
@@ -296,4 +296,10 @@ g = None
 if __name__ == "__main__":
     time.sleep(1)
     g = Gamer()
-    g.start()
+    while True:
+        try:
+            g.start()
+        except KeyboardInterrupt:
+            break
+        except:
+            pass
