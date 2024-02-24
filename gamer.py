@@ -1,5 +1,6 @@
 import time
-from typing import Iterable, Literal
+from datetime import datetime, timedelta
+from typing import Iterator, Literal
 
 import pyautogui as pg
 from PIL import Image
@@ -19,6 +20,8 @@ from worder import (
     words,
 )
 
+ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
+RESTART_INTERVAL = timedelta(hours=1)
 SCROLL_POSITION = (1400, 600)
 
 DURATION = 0.1
@@ -53,7 +56,7 @@ def _is_ok_start_word(w: str) -> bool:
     return len(w) == 5 and "ь" not in w and "ё" not in w
 
 
-def start_words() -> Iterable[str]:
+def start_words() -> Iterator[str]:
     while True:
         for wrd in words:
             if _is_ok_start_word(wrd):
@@ -72,10 +75,12 @@ class Gamer:
     _table_box: Rect | None = None
     _screen: Image.Image | None = None
     _prev_event: str | None
+    _last_reboot_time: datetime
 
     def __init__(self):
         self.reset()
         self._rescroll()
+        self._last_reboot_time = datetime.now()
 
     @staticmethod
     def _rescroll():
@@ -84,17 +89,24 @@ class Gamer:
         clicklib.scroll(10)
         clicklib.scroll(-1)
 
+    def _restart_if_time_is_come(self) -> None:
+        if datetime.now() - self._last_reboot_time > RESTART_INTERVAL:
+            self.restart()
+
     def restart(self):
         self.reset()
+        pg.click(SCROLL_POSITION)
         pg.hotkey("ctrl", "r")
+        self._last_reboot_time = datetime.now()
         time.sleep(60)
         self._rescroll()
 
     def start(self):
-        wait_player_time = 0
         prev = None
+        event_handle_time = 0
 
         while True:
+            self._restart_if_time_is_come()
             self.reset()
             time.sleep(EVENTS_SLEEP_TIME)
             p = regimg.predict(self.screen)
@@ -103,11 +115,12 @@ class Gamer:
                 # don't play twice at the same round
                 continue
 
-            wait_player_time += EVENTS_SLEEP_TIME
-            wait_player_time *= p.name == "rounded"
-            if wait_player_time > MAX_PLAYER_WAITING:
-                self.restart()
-                time.sleep(RELOAD_PAGE_TIME)
+            if prev == p.name:
+                if timedelta(seconds=event_handle_time) > ONE_EVENT_HANDLE_MAX_TIME:
+                    self.restart()
+                event_handle_time += EVENTS_SLEEP_TIME
+            else:
+                event_handle_time = 0
 
             self._handle_regimg(p, self.screen)
             prev = p.name
@@ -200,8 +213,7 @@ class Gamer:
                 self.save_recommended_word_to_dict(ri, scr)
 
         if ev == "winner":
-            sync_words_with_dict()
-            trim_dict(sync_words=False)
+            trim_dict()
 
     def save_recommended_word_to_dict(self, ri: regimg.RegImg, scr: Image.Image):
         top_left, bottom_right, _ = ri.points
