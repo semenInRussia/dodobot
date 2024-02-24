@@ -9,12 +9,22 @@ import clicklib
 import regimg
 from photo import Rect
 from screener import screen
-from tsrct import extract_table
-from worder import WordPath, n, random_5letters_words, search, sync_words_with_dict
+from tsrct import extract_table, read_text_at_img_fragment
+from worder import (
+    WordPath,
+    n,
+    random_5letters_words,
+    save_word_to_dict,
+    search,
+    sync_words_with_dict,
+    trim_dict,
+)
 
 DURATION = 0.1
 EVENTS_SLEEP_TIME = 2
 RELOAD_PAGE_TIME = 60
+
+WORDCHOOSE_LABEL_TEXT = "впиши слово"
 
 # the amount of time in second what bot will wait after the first round is end
 MAX_PLAYER_WAITING = 200
@@ -79,7 +89,9 @@ class Gamer:
 
         while True:
             time.sleep(EVENTS_SLEEP_TIME)
-            p = regimg.predict(screen())
+            self._make_screen()
+            assert self._screen is not None
+            p = regimg.predict(self._screen)
 
             if prev == "playing" and p.name == "playing":
                 # don't play twice at the same round
@@ -91,7 +103,7 @@ class Gamer:
                 self.restart()
                 time.sleep(RELOAD_PAGE_TIME)
 
-            self._handle_regimg(p)
+            self._handle_regimg(p, self._screen)
             prev = p.name
 
     def step(self) -> None:
@@ -155,7 +167,7 @@ class Gamer:
         for p in paths:
             self._press_word(p)
 
-    def _handle_regimg(self, ri: regimg.RegImg):
+    def _handle_regimg(self, ri: regimg.RegImg, scr: Image.Image | None = None):
         ev: event = ri.name  # type: ignore
 
         if ev in [
@@ -166,13 +178,14 @@ class Gamer:
             "start",
             "who",
             "winner",
-            "wordchoose",
         ]:
             clicklib.click(ri.points[0])
+
         elif ev == "round1help1":
             clicklib.mouse_down()
             pg.move(-200)
             clicklib.mouse_up()
+
         elif ev == "playing":
             top_left = ri.points[0]
             bottom_right = ri.points[1]
@@ -180,8 +193,24 @@ class Gamer:
             self._table_box = (*top_left, *bottom_right)
             self.play_round1()
 
-        if ev == "winner" and random.randint(0, 100) > 80:
+        elif ev == "wordchoose":
+            _, _, xy = ri.points
+            clicklib.click(xy)
+            if scr is not None:
+                self.save_recommended_word_to_dict(ri, scr)
+
+        if ev == "winner":
             sync_words_with_dict()
+            trim_dict(sync_words=False)
+
+    def save_recommended_word_to_dict(self, ri: regimg.RegImg, scr: Image.Image):
+        top_left, bottom_right, _ = ri.points
+        box = (*top_left, *bottom_right)
+        word = read_text_at_img_fragment(scr, box).lower().strip()
+        if word != WORDCHOOSE_LABEL_TEXT:
+            # gamer will sync the dict after winner with 30% change, so
+            # now sync=False
+            save_word_to_dict(word, sync=False)
 
     @property
     def table(self) -> list[str]:
