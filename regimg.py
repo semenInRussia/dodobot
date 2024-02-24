@@ -74,7 +74,7 @@ _regimgs_root = "./regimgs/"
 _rs = list(
     map(
         lambda f: RegImg.from_filename(_regimgs_root + f),
-        os.listdir(_regimgs_root),
+        filter(lambda f: f.endswith(".png"), os.listdir(_regimgs_root)),
     )
 )
 
