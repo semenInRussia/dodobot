@@ -16,7 +16,7 @@ from worder import WordPath, n, save_word_to_dict, search, trim_dict, words
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
 RESTART_INTERVAL = timedelta(minutes=40)
 
-WORDCHOOSE_SCREENS_AMOUNT = 10
+WORDCHOOSE_SCREENS_AMOUNT = 15
 
 DURATION = 0.1
 EVENTS_SLEEP_TIME = 2
