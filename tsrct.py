@@ -2,7 +2,14 @@ import easyocr
 import numpy as np
 from PIL import Image
 
-from photo import Rect, normalize_table_image
+from photo import (
+    WHITE,
+    Rect,
+    add_padding,
+    extract_table_image,
+    only_table_text,
+    split_image_on_rows,
+)
 from worder import n
 
 filename = "monitor-1.png"
@@ -15,21 +22,22 @@ def read_text_at_img_fragment(img: Image.Image, box: Rect):
 
 
 def extract_table(img: Image.Image, show=False) -> list[str]:
-    img = normalize_table_image(img)
+    img = img.crop(extract_table_image(img))
+    img = only_table_text(img)
 
     if show:
         img.show()
 
-    txt = _extract_text(img)
-    txt = txt.replace(" ", "").replace("\n", "").lower()
-    txt += (n * n - len(txt)) * "."
+    table = []
+    WHITE_BG = 255
 
-    return list(_chunks(txt, 5))
+    for img_row in split_image_on_rows(img, n):
+        img_row = add_padding(img_row, 60, WHITE_BG)
+        row_txt = _extract_text(img_row)
+        row_txt = row_txt.replace(" ", "").replace("\n", "").lower()
+        table.append(row_txt.ljust(n, "."))
 
-
-def _chunks(lst, n):
-    for i in range(0, len(lst), n):
-        yield lst[i : i + n]
+    return table
 
 
 def _extract_text(img: Image.Image) -> str:

@@ -1,4 +1,5 @@
 import os
+from typing import Iterator
 
 import numpy as np
 from PIL import Image
@@ -26,11 +27,16 @@ def extract_table_image(img: Image.Image) -> Rect:
     return _crop_region_with_colors(img, [TEXT_COLOR, TABLE_BG])
 
 
-def normalize_table_image(img: Image.Image):
-    img = _only_text(img, TEXT_COLOR, BLACK, WHITE)
-    img = _add_padding(img, 60, WHITE)
+def only_table_text(img: Image.Image) -> Image.Image:
+    return _only_text(img, TEXT_COLOR, BLACK, WHITE).convert(mode="L")
 
-    return img.convert(mode="L")
+
+def split_image_on_rows(img: Image.Image, n: int) -> Iterator[Image.Image]:
+    w, h = img.size
+    sz = h // n
+    for i in range(n):
+        # x0, y0, x, y
+        yield img.crop((0, sz * i, w, sz * i + sz))
 
 
 def is_color_exists(img: Image.Image, col) -> bool:
@@ -53,7 +59,7 @@ def _only_text(img: Image.Image, txt: Color, fg: Color, bg: Color) -> Image.Imag
     return Image.fromarray(a)
 
 
-def _add_padding(img: Image.Image, pad: int, bg: Color) -> Image.Image:
+def add_padding(img: Image.Image, pad: int, bg) -> Image.Image:
     w, h = img.size
     nsize = w + pad * 2, h + pad * 2
     padded = Image.new(img.mode, size=nsize, color=bg)
