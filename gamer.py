@@ -19,7 +19,7 @@ RESTART_INTERVAL = timedelta(minutes=40)
 
 WORDCHOOSE_SCREENS_AMOUNT = 15
 
-DURATION = 0.1
+DURATION = 0.05
 EVENTS_SLEEP_TIME = 2
 RELOAD_PAGE_TIME = 60
 
@@ -149,14 +149,14 @@ class Gamer:
             else:
                 self._press_word(p)
 
-        for p in last_cell_paths:
-            self._press_word(p)
-
         # mark all row words.  I choose the row words from the dict, so they
         # must be exist words, above I use the parameter worder.search.ignored_words
         # it's guaranteed that words aren't marked yet
         for i in range(n - 1, -1, -1):  # for i in [4,3,2,1,0] where 4=n-1
             self._press_word(_row_word_path(i))
+
+        for p in last_cell_paths:
+            self._press_word(p)
 
     def play_round2(self) -> None:
         for p in search(self.table, shuffle=True):
