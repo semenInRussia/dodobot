@@ -115,6 +115,28 @@ def _show_checked_words():
     print(f"I found {nwords} words")
 
 
+def _is_word_exists(wrd: str) -> bool:
+    if len(wrd) <= 1:
+        return False
+
+    if wrd in words:
+        return True
+
+    # check the other forms of the given words:
+    #
+    # the following code also return True for things like:
+    # кокосы - because кокос is exists
+    # сосне - because сосна is exists
+    if wrd[-2] in "уеыаоэяию":  # гласная
+        return False
+    if wrd[-1] in "ыуюяеи":
+        wrd = wrd[:-1]
+        ws = wrd, wrd + "а", wrd + "е", wrd + "о"
+        return any(map(lambda w: w in words, ws))
+
+    return False
+
+
 def _dfs(i: int, j: int, path: WordPath, word: str):
     global _checked_words, _used, _table, _paths
 
@@ -125,7 +147,7 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
 
     word += _table[i][j]
 
-    if word in words and len(word) > 1 and word not in _checked_words:
+    if _is_word_exists(word) and word not in _checked_words:
         _paths.append(path)
         _checked_words.add(word)
 
