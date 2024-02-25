@@ -126,7 +126,11 @@ class Gamer:
 
     def play_round1(self) -> None:
         self.fill()
-        paths = search(self.table, shuffle=True)
+
+        # ignore all words which are rows in table, it useful for 1st round, because
+        # in 100% cases mark all symbols in table, so x2 is
+        # guaranteed.  The main is to mark them at the end
+        paths = search(self.table, shuffle=True, ignored_words=self.table)
 
         # in this game if you mark all symbols in the first round,
         # then instantly after you mark the last symbol from table,
@@ -147,6 +151,9 @@ class Gamer:
         for p in last_cell_paths:
             self._press_word(p)
 
+        # mark all row words.  I choose the row words from the dict, so they
+        # must be exist words, above I use the parameter worder.search.ignored_words
+        # it's guaranteed that words aren't marked yet
         for i in range(n - 1, -1, -1):  # for i in [4,3,2,1,0] where 4=n-1
             self._press_word(_row_word_path(i))
 
