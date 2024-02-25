@@ -1,4 +1,5 @@
 import time
+import traceback
 from datetime import datetime, timedelta
 from typing import Iterator, Literal
 
@@ -322,4 +323,4 @@ if __name__ == "__main__":
         except pg.FailSafeException:
             _ = input("press Enter to continue")
         except:
-            pass
+            print(traceback.format_exc())
