@@ -26,11 +26,13 @@ def trim_dict(path="dict.txt", sync_words=True) -> None:
 sync_words_with_dict()
 
 
-def save_word_to_dict(word: str, path="dict.txt") -> None:
+def save_word_to_dict(word: str, path: str = "dict.txt", show: bool = False) -> None:
     global words
     words.add(word)
     with open(path, "a") as f:
         f.write(word + "\n")
+    if show:
+        print(f"amount of words is {len(words)}")
 
 
 Point = tuple[int, int]

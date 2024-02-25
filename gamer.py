@@ -10,19 +10,14 @@ import regimg
 from photo import Rect
 from screener import screen
 from tsrct import extract_table, read_text_at_img_fragment
-from worder import (
-    WordPath,
-    n,
-    save_word_to_dict,
-    search,
-    sync_words_with_dict,
-    trim_dict,
-    words,
-)
+from worder import WordPath, n, save_word_to_dict, search, trim_dict, words
 
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
-RESTART_INTERVAL = timedelta(hours=1)
+RESTART_INTERVAL = timedelta(minutes=40)
+
 SCROLL_POSITION = (1400, 600)
+
+WORDCHOOSE_SCREENS_AMOUNT = 10
 
 DURATION = 0.1
 EVENTS_SLEEP_TIME = 2
@@ -106,7 +101,6 @@ class Gamer:
         event_handle_time = 0
 
         while True:
-            self._restart_if_time_is_come()
             self.reset()
             time.sleep(EVENTS_SLEEP_TIME)
             p = regimg.predict(self.screen)
@@ -131,8 +125,6 @@ class Gamer:
 
     def play_round1(self) -> None:
         self.fill()
-        nwords = len(words)
-        print(f"search words (dict.size = {nwords})")
         paths = search(self.table, shuffle=True)
 
         # in this game if you mark all symbols in the first round,
@@ -208,12 +200,14 @@ class Gamer:
 
         elif ev == "wordchoose":
             _, _, xy = ri.points
-            clicklib.click(xy)
-            if scr is not None:
-                self.save_recommended_word_to_dict(ri, scr)
+            for _ in range(WORDCHOOSE_SCREENS_AMOUNT):
+                clicklib.click(xy)
+                if scr is not None:
+                    self.save_recommended_word_to_dict(ri, screen())
 
         if ev == "winner":
             trim_dict()
+            self._restart_if_time_is_come()
 
     def save_recommended_word_to_dict(self, ri: regimg.RegImg, scr: Image.Image):
         top_left, bottom_right, _ = ri.points
@@ -222,7 +216,7 @@ class Gamer:
         if word != WORDCHOOSE_LABEL_TEXT:
             # gamer will sync the dict after winner with 30% change, so
             # now sync=False
-            save_word_to_dict(word)
+            save_word_to_dict(word, show=True)
 
     @property
     def table(self) -> list[str]:
