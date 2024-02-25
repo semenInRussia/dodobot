@@ -122,16 +122,31 @@ def _is_word_exists(wrd: str) -> bool:
     if wrd in words:
         return True
 
+    if wrd[-2] in "йъ":
+        return False
+
+    # match cases like "змеи"
+    if wrd[-2] in "уеыаоэяию":  # гласная или Й
+        return wrd[-1] in "яеи" and (wrd[:-1] + "й" in words or wrd[:-1] + "я" in words)
+
+    # match cases like "брелке" "брелки"
+    if wrd[-2] == "к" and wrd[-1] in "еиа" and (wrd[:-2] + "ок") in words:
+        return True
+
+    # match отца
+    if wrd[-2] in "ц":
+        return wrd[-1] in "ыае" and wrd[:-1] in words
+
+    # match ежи
+
     # check the other forms of the given words:
     #
     # the following code also return True for things like:
     # кокосы - because кокос is exists
     # сосне - because сосна is exists
-    if wrd[-2] in "уеыаоэяиюй":  # гласная или Й
-        return False
     if wrd[-1] in "ыуеи":
         wrd = wrd[:-1]
-        ws = wrd, wrd + "а", wrd + "е", wrd + "о", wrd + "ь", wrd + "й"
+        ws = wrd, wrd + "а", wrd + "е", wrd + "о", wrd + "ь"
         return any(map(lambda w: w in words, ws))
 
     return False
