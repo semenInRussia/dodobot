@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import numpy as np
 import pyautogui as pg
@@ -27,10 +28,10 @@ def prepare_image(img: Image.Image) -> np.ndarray:
 
 class RegImg:
     _img: np.ndarray
-    name: str | None
+    name: Optional[str]
     points: list[tuple[int, int]]
 
-    def __init__(self, img: Image.Image, name: str | None = None):
+    def __init__(self, img: Image.Image, name: Optional[str] = None):
         self._img = prepare_image(img)
         self.name = name
         self._save_targets(img)
@@ -40,7 +41,7 @@ class RegImg:
             pg.moveTo(self.points[0])
 
     @staticmethod
-    def from_filename(filename: str, name: str | None = None) -> "RegImg":
+    def from_filename(filename: str, name: Optional[str] = None) -> "RegImg":
         if name is None:
             # the name is the first of filename
             # parts separated with dots

@@ -1,12 +1,14 @@
+from typing import Optional, Union
+
 import pyautogui as _pg
 
 scroll = _pg.scroll
 
 
 def click(
-    x: int | tuple[int, int] | None = None, y: int = 0, duration: float = 0
+    x: Union[int, tuple[int, int], None] = None, y: int = 0, duration: float = 0
 ) -> None:
-    p: tuple[int, int] | None = None
+    p: Optional[tuple[int, int]] = None
     if type(x) == tuple:
         p = x
     elif type(x) == int:
@@ -22,7 +24,9 @@ mouse_up = _pg.mouseUp
 mouse_down = _pg.mouseDown
 
 
-def move(x: int | tuple[int, int], y: int | None = None, duration: float = 0) -> None:
+def move(
+    x: Union[int, tuple[int, int]], y: Optional[int] = None, duration: float = 0
+) -> None:
     if (
         (type(x) == int or type(y) == int)
         and type(y) != type(x)

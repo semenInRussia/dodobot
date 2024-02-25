@@ -1,7 +1,7 @@
 import time
 import traceback
 from datetime import datetime, timedelta
-from typing import Iterator, Literal
+from typing import Iterator
 
 import pyautogui as pg
 from PIL import Image
@@ -31,20 +31,6 @@ MAX_PLAYER_WAITING = 200
 rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю"
 eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
 _rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
-
-event = (
-    Literal["credits"]
-    | Literal["disconnect"]
-    | Literal["home"]
-    | Literal["playing"]
-    | Literal["round1help1"]
-    | Literal["round1help2"]
-    | Literal["roundend"]
-    | Literal["start"]
-    | Literal["who"]
-    | Literal["winner"]
-    | Literal["wordchoose"]
-)
 
 
 def _is_ok_start_word(w: str) -> bool:
@@ -185,7 +171,7 @@ class Gamer:
             self._press_word(p)
 
     def _handle_regimg(self, ri: regimg.RegImg, scr: Image.Image | None = None):
-        ev: event = ri.name  # type: ignore
+        ev = ri.name  # type: ignore
 
         if ev in [
             "disconnect",

@@ -1,5 +1,6 @@
 import random
 from collections.abc import Iterable
+from typing import Optional
 
 n = 5
 MAX_WORD_LEN = 7
@@ -74,7 +75,7 @@ def search(
     table: list[str],
     show=False,
     shuffle=False,
-    ignored_words: Iterable[str] | None = None,
+    ignored_words: Optional[Iterable[str]] = None,
 ) -> list[WordPath]:
     global _checked_words, _used, _table, _paths
 

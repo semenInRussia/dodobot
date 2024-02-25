@@ -1,10 +1,10 @@
 import os
-from typing import Iterator
+from typing import Iterator, Union
 
 import numpy as np
 from PIL import Image
 
-Color = tuple[int, int, int, int] | tuple[int, int, int]
+Color = Union[tuple[int, int, int, int], tuple[int, int, int]]
 
 TEXT_COLOR = (26, 35, 37, 255)  # rgba
 TABLE_BG = (250, 172, 113, 255)
