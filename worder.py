@@ -1,6 +1,5 @@
-import itertools
 import random
-from collections.abc import Iterator
+from collections.abc import Iterable
 
 n = 5
 MAX_WORD_LEN = 7
@@ -48,7 +47,7 @@ Every element is a tuple from two values:
 Rows are numbered from the top to bottom.  Columns are numbered from
 the left to right, so the delta (-1, -1) is the delta for up-left movement.
 
-NOTE: that here straight movements are prefered over diag movements.
+NOTE: that here straight movements are preferred over diag movements.
 """
 _deltas: list[Point] = [
     # straight movements
@@ -71,10 +70,19 @@ _table: list[str] = []
 _paths: list[WordPath] = []
 
 
-def search(table: list[str], show=False, shuffle=False) -> list[WordPath]:
+def search(
+    table: list[str],
+    show=False,
+    shuffle=False,
+    ignored_words: Iterable[str] | None = None,
+) -> list[WordPath]:
     global _checked_words, _used, _table, _paths
 
     _checked_words = set()
+
+    if ignored_words:
+        _checked_words.update(ignored_words)
+
     _paths = []
     _table = table
 
@@ -83,6 +91,13 @@ def search(table: list[str], show=False, shuffle=False) -> list[WordPath]:
             path = [(i, j)]
             _fill_matrix(_used, False)
             _dfs(i, j, path=path, word="")
+
+    # at start the function I added these words as checked, because
+    # need to ignore them, but now they marked as checked that is a
+    # confusion
+    if ignored_words:
+        for w in ignored_words:
+            _checked_words.discard(w)
 
     if shuffle:
         random.shuffle(_paths)
@@ -144,6 +159,6 @@ if __name__ == "__main__":
         "фхцшщ",
     ]
     path = [(0, 1)]
-    paths = search(tbl, show=True)
+    paths = search(tbl, show=True, ignored_words=["лизун"])
     for p in paths:
         print(p)
