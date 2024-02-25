@@ -129,7 +129,7 @@ def _is_word_exists(wrd: str) -> bool:
     # сосне - because сосна is exists
     if wrd[-2] in "уеыаоэяию":  # гласная
         return False
-    if wrd[-1] in "ыуюяеи":
+    if wrd[-1] in "ыуеи":
         wrd = wrd[:-1]
         ws = wrd, wrd + "а", wrd + "е", wrd + "о"
         return any(map(lambda w: w in words, ws))
