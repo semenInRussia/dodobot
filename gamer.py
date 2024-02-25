@@ -9,13 +9,12 @@ import clicklib
 import regimg
 from photo import Rect
 from screener import screen
+from scroller import rescroll
 from tsrct import extract_table, read_text_at_img_fragment
 from worder import WordPath, n, save_word_to_dict, search, trim_dict, words
 
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
 RESTART_INTERVAL = timedelta(minutes=40)
-
-SCROLL_POSITION = (1400, 600)
 
 WORDCHOOSE_SCREENS_AMOUNT = 10
 
@@ -79,10 +78,7 @@ class Gamer:
 
     @staticmethod
     def _rescroll():
-        clicklib.move(SCROLL_POSITION)
-        clicklib.click()
-        clicklib.scroll(10)
-        clicklib.scroll(-1)
+        rescroll()
 
     def _restart_if_time_is_come(self) -> None:
         if datetime.now() - self._last_reboot_time > RESTART_INTERVAL:
@@ -90,7 +86,7 @@ class Gamer:
 
     def restart(self):
         self.reset()
-        pg.click(SCROLL_POSITION)
+        rescroll()
         pg.hotkey("ctrl", "r")
         self._last_reboot_time = datetime.now()
         time.sleep(60)
