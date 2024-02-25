@@ -64,6 +64,11 @@ def _press_rus_char(ch: str) -> None:
     pg.press(_rus_to_eng.get(ch, ""))
 
 
+def _row_word_path(i: int) -> WordPath:
+    """Return a word path from the left cell to right cell of i-th row."""
+    return list(map(lambda j: (i, j), range(n)))
+
+
 class Gamer:
     _table: list[str] | None = None
     _table_box: Rect | None = None
@@ -141,6 +146,9 @@ class Gamer:
 
         for p in last_cell_paths:
             self._press_word(p)
+
+        for i in range(n - 1, -1, -1):  # for i in [4,3,2,1,0] where 4=n-1
+            self._press_word(_row_word_path(i))
 
     def play_round2(self) -> None:
         for p in search(self.table, shuffle=True):
@@ -276,8 +284,7 @@ class Gamer:
     def _press_word(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
         print(f"press a word ({len(path)})")
-        self._move_cursor_to_cell(*path[0])
-        clicklib.click()
+        clicklib.click(self._cell_position(*path[0]))
         clicklib.mouse_down()
         for i, j in path:
             self._move_cursor_to_cell(i, j)
