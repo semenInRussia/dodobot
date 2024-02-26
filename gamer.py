@@ -18,7 +18,7 @@ from worder import WordPath, n, save_word_to_dict, search, trim_dict
 
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
 RESTART_INTERVAL = timedelta(minutes=40)
-PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=50)
+PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=47)
 
 WORDCHOOSE_SCREENS_AMOUNT = 15
 
@@ -147,7 +147,7 @@ class Gamer:
         for p in paths:
             # if playing time is up, mark all symbols to do x2
             round_time = datetime.now() - round_start
-            if round_time >= PLAYING_ROUND_TIME:
+            if not row_paths_used and round_time >= PLAYING_ROUND_TIME:
                 row_paths_used = True
                 self._press_row_words()
 
