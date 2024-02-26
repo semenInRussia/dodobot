@@ -22,7 +22,6 @@ def read_text_at_img_fragment(img: Image.Image, box: Rect):
 
 
 def extract_table(img: Image.Image, show=False) -> list[str]:
-    img = img.crop(extract_table_image(img))
     img = only_table_text(img)
 
     if show:
