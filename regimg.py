@@ -32,6 +32,7 @@ class RegImg:
     points: list[tuple[int, int]]
 
     def __init__(self, img: Image.Image, name: Optional[str] = None):
+        img = img.convert("RGBA")
         self._img = prepare_image(img)
         self.name = name
         self._save_targets(img)
