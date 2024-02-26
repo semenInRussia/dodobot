@@ -189,6 +189,9 @@ class Gamer:
             pg.move(-200)
             clicklib.mouse_up()
 
+        elif ev == "help":
+            self.restart()
+
         elif ev == "playing":
             top_left = ri.points[0]
             bottom_right = ri.points[1]
