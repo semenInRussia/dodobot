@@ -1,5 +1,6 @@
 import time
 import traceback
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import Iterator
 
@@ -8,14 +9,16 @@ from PIL import Image
 
 import clicklib
 import regimg
+import worder
 from photo import Rect
 from screener import screen
 from scroller import rescroll
 from tsrct import extract_table, read_text_at_img_fragment
-from worder import WordPath, n, save_word_to_dict, search, trim_dict, words
+from worder import WordPath, n, save_word_to_dict, search, trim_dict
 
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
 RESTART_INTERVAL = timedelta(minutes=40)
+PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=50)
 
 WORDCHOOSE_SCREENS_AMOUNT = 15
 
@@ -39,16 +42,17 @@ def _is_ok_start_word(w: str) -> bool:
 
 def start_words() -> Iterator[str]:
     while True:
-        for wrd in words:
+        for wrd in worder.words:
             if _is_ok_start_word(wrd):
                 yield wrd
 
 
-_wrds = start_words()
-
-
 def _press_rus_char(ch: str) -> None:
     pg.press(_rus_to_eng.get(ch, ""))
+
+
+def _row_words_paths() -> Iterable[WordPath]:
+    return map(_row_word_path, range(n - 1, -1, -1))
 
 
 def _row_word_path(i: int) -> WordPath:
@@ -62,11 +66,13 @@ class Gamer:
     _screen: Image.Image | None = None
     _prev_event: str | None
     _last_reboot_time: datetime
+    _wrds: Iterator[str]
 
-    def __init__(self):
+    def __init__(self, words=None):
         self.reset()
         self._rescroll()
         self._last_reboot_time = datetime.now()
+        self._wrds = words or start_words()
 
     @staticmethod
     def _rescroll():
@@ -112,11 +118,13 @@ class Gamer:
         self._handle_regimg(p)
 
     def play_round1(self) -> None:
+        round_start = datetime.now()
+
         self.fill()
 
-        # ignore all words which are rows in table, it useful for 1st round, because
-        # in 100% cases mark all symbols in table, so x2 is
-        # guaranteed.  The main is to mark them at the end
+        # ignore all words which are rows in table, it useful for 1st
+        # round, because in 100% cases mark all symbols in table, so
+        # x2 is guaranteed.  The main is to mark them at the end
         paths = search(self.table, shuffle=True, ignored_words=self.table)
 
         # in this game if you mark all symbols in the first round,
@@ -128,20 +136,34 @@ class Gamer:
 
         last_cell = 0, 0  # cell which bot will visit the last
 
+        # sometimes needed to mark all row words.  I choose the row
+        # words from the dict, so they must be exist words, above I
+        # use the parameter worder.search.ignored_words it's
+        # guaranteed that words aren't marked yet if mark all row
+        # words, then round is ended with x2
+        row_paths_used = False
+
         last_cell_paths = []
         for p in paths:
+            # if playing time is up, mark all symbols to do x2
+            round_time = datetime.now() - round_start
+            if round_time >= PLAYING_ROUND_TIME:
+                row_paths_used = True
+                self._press_row_words()
+
             if last_cell in p:
                 last_cell_paths.append(p)
             else:
                 self._press_word(p)
 
-        # mark all row words.  I choose the row words from the dict, so they
-        # must be exist words, above I use the parameter worder.search.ignored_words
-        # it's guaranteed that words aren't marked yet
-        for i in range(n - 1, -1, -1):  # for i in [4,3,2,1,0] where 4=n-1
-            self._press_word(_row_word_path(i))
+        if not row_paths_used:
+            self._press_row_words()
 
         for p in last_cell_paths:
+            self._press_word(p)
+
+    def _press_row_words(self) -> None:
+        for p in _row_words_paths():
             self._press_word(p)
 
     def play_round2(self) -> None:
@@ -158,7 +180,7 @@ class Gamer:
     def fill(self) -> None:
         """Fill an empty table at the screen with letters"""
         for i in range(n):
-            wrd = next(_wrds)
+            wrd = next(self._wrds)
             for j, ch in enumerate(wrd):
                 self._move_cursor_to_cell(i, j)
                 clicklib.click()
