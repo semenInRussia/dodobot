@@ -20,7 +20,7 @@ ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
 RESTART_INTERVAL = timedelta(minutes=40)
 PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=47)
 
-WORDCHOOSE_SCREENS_AMOUNT = 15
+WORDCHOOSE_SCREENS_AMOUNT = 10
 
 DURATION = 0.01
 EVENTS_SLEEP_TIME = 2
@@ -40,11 +40,15 @@ def _is_ok_start_word(w: str) -> bool:
     return len(w) == 5 and "ь" not in w and "ё" not in w
 
 
-def start_words() -> Iterator[str]:
+def start_words():
+    sw = []
+
+    for w in worder.words:
+        if _is_ok_start_word(w):
+            sw.append(w)
+
     while True:
-        for wrd in worder.words:
-            if _is_ok_start_word(wrd):
-                yield wrd
+        yield from sw
 
 
 def _press_rus_char(ch: str) -> None:
@@ -61,12 +65,15 @@ def _row_word_path(i: int) -> WordPath:
 
 
 class Gamer:
+    _screen: Image.Image | None = None
+
+    # for round playing
     _table: list[str] | None = None
     _table_box: Rect | None = None
-    _screen: Image.Image | None = None
-    _prev_event: str | None
-    _last_reboot_time: datetime
     _wrds: Iterator[str]
+
+    # for .start
+    _last_reboot_time: datetime
 
     def __init__(self, words=None):
         self.reset()
@@ -79,7 +86,8 @@ class Gamer:
         rescroll()
 
     def _restart_if_time_is_come(self) -> None:
-        if datetime.now() - self._last_reboot_time > RESTART_INTERVAL:
+        uptime = datetime.now() - self._last_reboot_time
+        if uptime > RESTART_INTERVAL:
             self.restart()
 
     def restart(self):
@@ -95,8 +103,8 @@ class Gamer:
         event_handle_time = 0
 
         while True:
-            self.reset()
             time.sleep(EVENTS_SLEEP_TIME)
+            self.reset()
             p = regimg.predict(self.screen)
 
             if prev == "playing" and p.name == "playing":
@@ -113,13 +121,10 @@ class Gamer:
             self._handle_regimg(p, self.screen)
             prev = p.name
 
-    def step(self) -> None:
-        p = regimg.predict(screen())
-        self._handle_regimg(p)
-
-    def play_round1(self) -> None:
+    def play_round(self) -> None:
         round_start = datetime.now()
 
+        # fill the table with letters
         self.fill()
 
         # ignore all words which are rows in table, it useful for 1st
@@ -134,8 +139,6 @@ class Gamer:
         # includes (in the first round is one word, after which round
         # will be end)
 
-        last_cell = 0, 0  # cell which bot will visit the last
-
         # sometimes needed to mark all row words.  I choose the row
         # words from the dict, so they must be exist words, above I
         # use the parameter worder.search.ignored_words it's
@@ -143,7 +146,9 @@ class Gamer:
         # words, then round is ended with x2
         row_paths_used = False
 
+        last_cell = 0, 0  # cell which bot will visit the last
         last_cell_paths = []
+
         for p in paths:
             # if playing time is up, mark all symbols to do x2
             round_time = datetime.now() - round_start
@@ -166,10 +171,6 @@ class Gamer:
         for p in _row_words_paths():
             self._press_word(p)
 
-    def play_round2(self) -> None:
-        for p in search(self.table, shuffle=True):
-            self._press_word(p)
-
     def reset(self) -> None:
         """Mark some variables as non-actual"""
         print("reset")
@@ -182,15 +183,8 @@ class Gamer:
         for i in range(n):
             wrd = next(self._wrds)
             for j, ch in enumerate(wrd):
-                self._move_cursor_to_cell(i, j)
-                clicklib.click()
+                clicklib.click(self._cell_position(i, j))
                 _press_rus_char(ch)
-
-    def press_all_table_words(self) -> None:
-        print("all words pressing")
-        paths = search(self.table, shuffle=True)
-        for p in paths:
-            self._press_word(p)
 
     def _handle_regimg(self, ri: regimg.RegImg, scr: Image.Image | None = None):
         ev = ri.name  # type: ignore
@@ -219,7 +213,7 @@ class Gamer:
             bottom_right = ri.points[1]
             self.reset()
             self._table_box = (*top_left, *bottom_right)
-            self.play_round1()
+            self.play_round()
 
         elif ev == "wordchoose":
             _, _, xy = ri.points
@@ -277,7 +271,8 @@ class Gamer:
         """Return the screenshot image of the screen."""
         if self._screen is None:
             self._make_screen()
-        return self._screen  # type: ignore
+        assert self._screen is not None
+        return self._screen
 
     def _make_screen(self) -> None:
         """Do a screenshot, save the result into the respective variable."""
@@ -288,6 +283,14 @@ class Gamer:
     def table_image_size(self) -> tuple[int, int]:
         x0, y0, x1, y1 = self.table_box
         return x1 - x0, y1 - y0
+
+    @property
+    def _cell_sizes(self) -> tuple[int, int]:
+        """Get a tuple from table cell sizes.
+
+        The first element is horizontal size, the second is vertical"""
+        w, h = self.table_image_size
+        return w // n, h // n
 
     def _move_cursor_to_cell(self, i: int, j: int) -> None:
         clicklib.move(*self._cell_position(i, j), duration=DURATION)
@@ -308,18 +311,6 @@ class Gamer:
         for i, j in path:
             self._move_cursor_to_cell(i, j)
         clicklib.mouse_up()
-
-    @property
-    def _cell_sizes(self) -> tuple[int, int]:
-        """Get a tuple from table cell sizes.
-
-        The first element is horizontal size, the second is vertical"""
-        w, h = self.table_image_size
-        # k = 1.2  # is chosen randomly
-        k = 1
-        hsz = int(k * (w / n))
-        vsz = int(k * (h / n))
-        return hsz, vsz
 
 
 g = None
