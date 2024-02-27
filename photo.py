@@ -31,7 +31,7 @@ def extract_region_with_palette(img: Image.Image, palette: Palette) -> Rect:
 
 def only_table_text(img: Image.Image, palette: Palette) -> Image.Image:
     text_color = palette[0]
-    return _only_text(img, text_color, BLACK, WHITE).convert(mode="L")
+    return _only_text(img.convert("RGBA"), text_color, BLACK, WHITE).convert(mode="L")
 
 
 def split_image_on_rows(img: Image.Image, n: int) -> Iterator[Image.Image]:
@@ -50,12 +50,12 @@ def is_color_exists(img: Image.Image, col) -> bool:
 
 
 def _only_text(img: Image.Image, txt: Color, fg: Color, bg: Color) -> Image.Image:
-    a = np.array(img)
+    a = np.array(img.convert("RGBA"))
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
     msk = (r == txt[0]) & (g == txt[1]) & (b == txt[2])
 
-    a[:, :, :][msk] = fg[:3]
-    a[:, :, :][~msk] = bg[:3]
+    a[:, :, :][msk] = fg
+    a[:, :, :][~msk] = bg
 
     return Image.fromarray(a)
 
@@ -102,10 +102,17 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    root = "regimgs/"
+    root = "regimgs.ilya/"
+    palette = read_palette("regimgs.ilya/palette")
+    # root = "regimgs/"
+    # palette = read_palette("regimgs/palette")
+
+    print(palette)
+
     for filename in os.listdir(root):
         if not filename.endswith(".png"):
             continue
         img = Image.open(root + filename)
-        box = extract_canvas_image(img)
-        img.crop(box).show()
+        box = extract_region_with_palette(img, palette)
+        img = img.crop(box)
+        img.show()
