@@ -6,8 +6,7 @@ from PIL import Image
 
 Color = Union[tuple[int, int, int, int], tuple[int, int, int]]
 
-TEXT_COLOR = (26, 35, 37, 255)  # rgba
-TABLE_BG = (250, 172, 113, 255)
+TEXT_COLOR = (32, 40, 42, 255)  # rgba
 
 WHITE = (255, 255, 255, 255)
 BLACK = (0, 0, 0, 255)
@@ -19,12 +18,8 @@ Rect = tuple[int, int, int, int]
 
 
 def extract_canvas_image(img: Image.Image) -> Rect:
-    cols = [(17, 27, 29), (238, 214, 177), (238, 214, 177), (34, 44, 46)]
-    return _crop_region_with_colors(img, cols)
-
-
-def extract_table_image(img: Image.Image) -> Rect:
-    return _crop_region_with_colors(img, [TEXT_COLOR, TABLE_BG])
+    cols = [(32, 40, 42), (24, 33, 34), (238, 213, 175)]
+    return _crop_region_with_colors(img.convert("rgb"), cols)
 
 
 def only_table_text(img: Image.Image) -> Image.Image:
