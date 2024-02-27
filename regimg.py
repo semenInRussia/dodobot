@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Callable, Iterator, Optional
 
 import numpy as np
 import pyautogui as pg
@@ -16,14 +16,6 @@ def _into_one_size(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray
     minw = min(aw, bw)
 
     return a[:minw, :minh], b[:minw, :minh]
-
-
-def prepare_image(img: Image.Image) -> np.ndarray:
-    box = photo.extract_canvas_image(img)
-    img = img.crop(box)
-    img = img.convert("L")
-
-    return np.array(img)
 
 
 class RegImg:
@@ -72,29 +64,49 @@ class RegImg:
         self.points = list(zip(xs, ys))
 
 
-_regimgs_root = "./regimgs/"
-_rs = list(
-    map(
-        lambda f: RegImg.from_filename(_regimgs_root + f),
-        filter(lambda f: f.endswith(".png"), os.listdir(_regimgs_root)),
-    )
-)
+class Predicter:
+    _ris: list[RegImg]
+    _prepare_function: Optional[Callable]
+
+    def __init__(self, regimgs: Iterator[RegImg], prepare_function=None):
+        self._prepare_function = prepare_function
+        self._ris = list(regimgs)
+
+    @classmethod
+    def from_directory(cls, root: str):
+        if not root.endswith("/"):
+            root += "/"
+        files = os.listdir(root)
+        files = filter(lambda f: f.endswith(".png"), files)
+        files = map(lambda f: root + f, files)
+        regimgs = map(RegImg.from_filename, files)
+        return cls(regimgs)
+
+    def predict(self, img: Image.Image) -> RegImg:
+        if self._prepare_function:
+            a = self._prepare_function(img)
+        else:
+            a = np.array(img.convert("L"))
+
+        return max(self._ris, key=lambda r: r.match_value(a))
 
 
-def predict(img: Image.Image) -> RegImg:
-    a = prepare_image(img)
-    ri = max(
-        _rs,
-        key=lambda ri: ri.match_value(a),
-    )
+def prepare_image(img: Image.Image) -> np.ndarray:
+    box = photo.extract_canvas_image(img)
+    img = img.crop(box)
+    img = img.convert("L")
 
-    print(":", ri.name)
-    return ri
+    return np.array(img)
+
+
+class GamePredicter(Predicter):
+    def __init__(self, regimgs: Iterator[RegImg]):
+        super().__init__(regimgs, prepare_function=prepare_image)
 
 
 if __name__ == "__main__":
-    cadrs_root = "./cadrs/"
+    gp = GamePredicter.from_directory("regimgs")
 
     for cadr_filename in os.listdir(cadrs_root):
         img = Image.open(cadrs_root + cadr_filename)
-        predict(img)
+        print(cadr_filename, gp.predict(img).name)

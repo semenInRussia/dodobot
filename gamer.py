@@ -75,11 +75,12 @@ class Gamer:
     # for .start
     _last_reboot_time: datetime
 
-    def __init__(self, words=None):
+    def __init__(self, words=None, predicter=None):
         self.reset()
         self._rescroll()
         self._last_reboot_time = datetime.now()
         self._wrds = words or start_words()
+        self._predicter = predicter or regimg.GamePredicter.from_directory("regimgs")
 
     @staticmethod
     def _rescroll():
@@ -105,7 +106,7 @@ class Gamer:
         while True:
             time.sleep(EVENTS_SLEEP_TIME)
             self.reset()
-            p = regimg.predict(self.screen)
+            p = self._predicter.predict(self.screen)
 
             if prev == "playing" and p.name == "playing":
                 # don't play twice at the same round
