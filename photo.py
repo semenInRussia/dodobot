@@ -40,7 +40,6 @@ def split_image_on_rows(img: Image.Image, n: int) -> Iterator[Image.Image]:
 
 
 def is_color_exists(img: Image.Image, col) -> bool:
-    img = img.convert("RGB")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
     m = (r == col[0]) & (g == col[1]) & (b == col[2])
@@ -74,7 +73,7 @@ def _crop_region_with_colors(img: Image.Image, colors: list[Color]) -> Rect:
 
     Return the tuple (left, upper, right, down) of this image"""
 
-    img = img.convert(mode="RGB")
+    img = img.convert(mode="RGBA")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
 

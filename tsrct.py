@@ -2,14 +2,7 @@ import easyocr
 import numpy as np
 from PIL import Image
 
-from photo import (
-    WHITE,
-    Rect,
-    add_padding,
-    extract_table_image,
-    only_table_text,
-    split_image_on_rows,
-)
+from photo import Rect, add_padding, only_table_text, split_image_on_rows
 from worder import n
 
 filename = "monitor-1.png"
@@ -57,5 +50,5 @@ def _extract_text(img: Image.Image) -> str:
     return txt
 
 
-if __name__ == "__main__":
-    print(extract_table(Image.open(filename), show=True))
+# if __name__ == "__main__":
+# print(extract_table(Image.open(filename), show=True))
