@@ -2,7 +2,7 @@ import easyocr
 import numpy as np
 from PIL import Image
 
-from photo import Rect, add_padding, only_table_text, split_image_on_rows
+from photo import Palette, Rect, add_padding, only_table_text, split_image_on_rows
 from worder import n
 
 filename = "monitor-1.png"
@@ -14,8 +14,8 @@ def read_text_at_img_fragment(img: Image.Image, box: Rect):
     return _extract_text(img.crop(box))
 
 
-def extract_table(img: Image.Image, show=False) -> list[str]:
-    img = only_table_text(img)
+def extract_table(img: Image.Image, palette: Palette, show=False) -> list[str]:
+    img = only_table_text(img, palette)
 
     if show:
         img.show()

@@ -5,8 +5,7 @@ import numpy as np
 from PIL import Image
 
 Color = Union[tuple[int, int, int, int], tuple[int, int, int]]
-
-TEXT_COLOR = (32, 40, 42, 255)  # rgba
+Palette = list[Color]
 
 WHITE = (255, 255, 255, 255)
 BLACK = (0, 0, 0, 255)
@@ -17,13 +16,22 @@ N = 5
 Rect = tuple[int, int, int, int]
 
 
-def extract_canvas_image(img: Image.Image) -> Rect:
-    cols = [(32, 40, 42), (24, 33, 34), (238, 213, 175)]
-    return _crop_region_with_colors(img.convert("rgb"), cols)
+def read_palette(filename: str) -> list[Color]:
+    pal = []
+    with open(filename) as f:
+        for row in f:
+            col = map(lambda s: int(s.strip()), row.split(","))
+            pal.append(tuple(col))
+    return pal
 
 
-def only_table_text(img: Image.Image) -> Image.Image:
-    return _only_text(img, TEXT_COLOR, BLACK, WHITE).convert(mode="L")
+def extract_region_with_palette(img: Image.Image, palette: Palette) -> Rect:
+    return _crop_region_with_colors(img, palette)
+
+
+def only_table_text(img: Image.Image, palette: Palette) -> Image.Image:
+    text_color = palette[0]
+    return _only_text(img.convert("RGBA"), text_color, BLACK, WHITE).convert(mode="L")
 
 
 def split_image_on_rows(img: Image.Image, n: int) -> Iterator[Image.Image]:
@@ -42,13 +50,12 @@ def is_color_exists(img: Image.Image, col) -> bool:
 
 
 def _only_text(img: Image.Image, txt: Color, fg: Color, bg: Color) -> Image.Image:
-    img = img.convert(mode="RGB")
-    a = np.array(img)
+    a = np.array(img.convert("RGBA"))
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
     msk = (r == txt[0]) & (g == txt[1]) & (b == txt[2])
 
-    a[:, :, :][msk] = fg[:3]
-    a[:, :, :][~msk] = bg[:3]
+    a[:, :, :][msk] = fg
+    a[:, :, :][~msk] = bg
 
     return Image.fromarray(a)
 
@@ -95,10 +102,17 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    root = "regimgs/"
+    root = "regimgs.ilya/"
+    palette = read_palette("regimgs.ilya/palette")
+    # root = "regimgs/"
+    # palette = read_palette("regimgs/palette")
+
+    print(palette)
+
     for filename in os.listdir(root):
         if not filename.endswith(".png"):
             continue
         img = Image.open(root + filename)
-        box = extract_canvas_image(img)
-        img.crop(box).show()
+        box = extract_region_with_palette(img, palette)
+        img = img.crop(box)
+        img.show()
