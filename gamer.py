@@ -8,6 +8,7 @@ import pyautogui as pg
 from PIL import Image
 
 import clicklib
+import photo
 import regimg
 import worder
 from photo import Rect
@@ -75,12 +76,13 @@ class Gamer:
     # for .start
     _last_reboot_time: datetime
 
-    def __init__(self, words=None, predicter=None):
+    def __init__(self, words=None, predicter=None, palette=None):
         self.reset()
         self._rescroll()
         self._last_reboot_time = datetime.now()
         self._wrds = words or start_words()
         self._predicter = predicter or regimg.GamePredicter.from_directory("regimgs")
+        self._palette = palette or photo.read_palette("regimgs/palette")
 
     @staticmethod
     def _rescroll():
@@ -262,7 +264,7 @@ class Gamer:
         print("extract table")
 
         img = self.screen.crop(self.table_box)
-        self._table = extract_table(img)
+        self._table = extract_table(img, self._palette)
 
         for row in self._table:
             print(row)

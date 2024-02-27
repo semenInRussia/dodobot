@@ -91,8 +91,12 @@ class Predicter:
         return max(self._ris, key=lambda r: r.match_value(a))
 
 
-def prepare_image(img: Image.Image) -> np.ndarray:
-    box = photo.extract_canvas_image(img)
+def prepare_image(
+    img: Image.Image, palette: Optional[list[photo.Color]] = None
+) -> np.ndarray:
+    if palette is None:
+        palette = photo.read_palette("regimgs/palette")
+    box = photo.extract_region_with_palette(img, palette)
     img = img.crop(box)
     img = img.convert("L")
 
@@ -100,13 +104,11 @@ def prepare_image(img: Image.Image) -> np.ndarray:
 
 
 class GamePredicter(Predicter):
-    def __init__(self, regimgs: Iterator[RegImg]):
-        super().__init__(regimgs, prepare_function=prepare_image)
+    def __init__(
+        self, regimgs: Iterator[RegImg], palette: Optional[list[photo.Color]] = None
+    ):
+        self.palette = palette
+        super().__init__(regimgs, prepare_function=self._prepare_image)
 
-
-if __name__ == "__main__":
-    gp = GamePredicter.from_directory("regimgs")
-
-    for cadr_filename in os.listdir(cadrs_root):
-        img = Image.open(cadrs_root + cadr_filename)
-        print(cadr_filename, gp.predict(img).name)
+    def _prepare_image(self, img: Image.Image) -> np.ndarray:
+        return prepare_image(img, palette=self.palette)

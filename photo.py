@@ -5,9 +5,7 @@ import numpy as np
 from PIL import Image
 
 Color = Union[tuple[int, int, int, int], tuple[int, int, int]]
-
-TEXT_COLOR = (26, 35, 37, 255)  # rgba
-TABLE_BG = (250, 172, 113, 255)
+Palette = list[Color]
 
 WHITE = (255, 255, 255, 255)
 BLACK = (0, 0, 0, 255)
@@ -18,17 +16,22 @@ N = 5
 Rect = tuple[int, int, int, int]
 
 
-def extract_canvas_image(img: Image.Image) -> Rect:
-    cols = [(17, 27, 29), (238, 214, 177), (238, 214, 177), (34, 44, 46)]
-    return _crop_region_with_colors(img, cols)
+def read_palette(filename: str) -> list[Color]:
+    pal = []
+    with open(filename) as f:
+        for row in f:
+            col = map(lambda s: int(s.strip()), row.split(","))
+            pal.append(tuple(col))
+    return pal
 
 
-def extract_table_image(img: Image.Image) -> Rect:
-    return _crop_region_with_colors(img, [TEXT_COLOR, TABLE_BG])
+def extract_region_with_palette(img: Image.Image, palette: Palette) -> Rect:
+    return _crop_region_with_colors(img, palette)
 
 
-def only_table_text(img: Image.Image) -> Image.Image:
-    return _only_text(img, TEXT_COLOR, BLACK, WHITE).convert(mode="L")
+def only_table_text(img: Image.Image, palette: Palette) -> Image.Image:
+    text_color = palette[0]
+    return _only_text(img, text_color, BLACK, WHITE).convert(mode="L")
 
 
 def split_image_on_rows(img: Image.Image, n: int) -> Iterator[Image.Image]:
@@ -47,7 +50,6 @@ def is_color_exists(img: Image.Image, col) -> bool:
 
 
 def _only_text(img: Image.Image, txt: Color, fg: Color, bg: Color) -> Image.Image:
-    img = img.convert(mode="RGB")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
     msk = (r == txt[0]) & (g == txt[1]) & (b == txt[2])
