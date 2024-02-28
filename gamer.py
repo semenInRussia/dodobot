@@ -17,7 +17,7 @@ from scroller import rescroll
 from tsrct import extract_table, read_text_at_img_fragment
 from worder import WordPath, n, save_word_to_dict, search, trim_dict
 
-ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=5)
+ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=4)
 RESTART_INTERVAL = timedelta(minutes=40)
 PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=47)
 
@@ -103,7 +103,7 @@ class Gamer:
 
     def start(self):
         prev = None
-        event_handle_time = 0
+        event_handle_start_time = datetime.now()
 
         while True:
             time.sleep(EVENTS_SLEEP_TIME)
@@ -115,13 +115,16 @@ class Gamer:
                 # don't play twice at the same round
                 continue
 
-            if prev == p.name:
-                if timedelta(seconds=event_handle_time) > ONE_EVENT_HANDLE_MAX_TIME:
-                    self.restart()
-                    event_handle_time = 0
-                event_handle_time += EVENTS_SLEEP_TIME
-            else:
-                event_handle_time = 0
+            if (
+                prev == p.name
+                and datetime.now() - event_handle_start_time
+                >= ONE_EVENT_HANDLE_MAX_TIME
+            ):
+                self.restart()
+                event_handle_start_time = datetime.now()
+
+            if prev != p.name:
+                event_handle_start_time = datetime.now()
 
             self._handle_regimg(p, self.screen)
             prev = p.name
