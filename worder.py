@@ -4,7 +4,7 @@ from typing import Optional
 
 n = 5
 MAX_WORD_LEN = 7
-words = set()
+words: set[str] = set()
 
 
 def sync_words_with_dict(path="dict.txt") -> None:
@@ -28,10 +28,12 @@ sync_words_with_dict()
 
 def save_word_to_dict(word: str, path: str = "dict.txt", show: bool = False) -> None:
     global words
+
     if word not in words:
         words.add(word)
         with open(path, "a") as f:
             f.write(word + "\n")
+
     if show:
         print(f"amount of words is {len(words)}")
 
