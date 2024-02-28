@@ -123,20 +123,16 @@ def _is_word_exists(wrd: str) -> bool:
     if wrd in words:
         return True
 
-    if wrd[-2] in "йъ":
-        return False
-
-    # match cases like "змеи"
-    if wrd[-2] in "уеыаоэяию":  # гласная или Й
+    if wrd[-2] in "уеыаоэяиюйъ":
         return False
 
     # match cases like "брелке" "брелки"
     if wrd[-2] == "к" and wrd[-1] in "еиа" and (wrd[:-2] + "ок") in words:
         return True
 
-    # match отца
-    if wrd[-2] in "ц":
-        return wrd[-1] in "ыае" and wrd[:-1] in words
+    # match cases like отцы
+    if wrd[-2] == "ц" and wrd[-1] in "ыаеу" and (wrd[:-2] + "ец") in words:
+        return True
 
     # check the other forms of the given words:
     #
