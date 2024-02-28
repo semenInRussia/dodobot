@@ -108,7 +108,8 @@ class Gamer:
         while True:
             time.sleep(EVENTS_SLEEP_TIME)
             self.reset()
-            p = self._predicter.predict(self.screen)
+            p = self._predict_image(self.screen)
+            print(f"event: {p.name}")
 
             if prev == "playing" and p.name == "playing":
                 # don't play twice at the same round
@@ -117,12 +118,21 @@ class Gamer:
             if prev == p.name:
                 if timedelta(seconds=event_handle_time) > ONE_EVENT_HANDLE_MAX_TIME:
                     self.restart()
+                    event_handle_time = 0
                 event_handle_time += EVENTS_SLEEP_TIME
             else:
                 event_handle_time = 0
 
             self._handle_regimg(p, self.screen)
             prev = p.name
+
+    def _predict_image(self, img: Image.Image) -> regimg.RegImg:
+        try:
+            p = self._predicter.predict(img)
+        except ValueError:
+            return regimg.NullRegImg
+        else:
+            return p
 
     def play_round(self) -> None:
         round_start = datetime.now()

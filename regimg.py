@@ -23,9 +23,12 @@ class RegImg:
     name: Optional[str]
     points: list[tuple[int, int]]
 
-    def __init__(self, img: Image.Image, name: Optional[str] = None):
+    def __init__(
+        self, img: Image.Image, name: Optional[str] = None, prepare_function=None
+    ):
+        prepare_function = prepare_function or prepare_image
         img = img.convert("RGBA")
-        self._img = prepare_image(img)
+        self._img = prepare_function(img)
         self.name = name
         self._save_targets(img)
 
@@ -97,6 +100,7 @@ def prepare_image(
     if palette is None:
         palette = photo.read_palette("regimgs/palette")
     box = photo.extract_region_with_palette(img, palette)
+
     img = img.crop(box)
     img = img.convert("L")
 
@@ -112,3 +116,6 @@ class GamePredicter(Predicter):
 
     def _prepare_image(self, img: Image.Image) -> np.ndarray:
         return prepare_image(img, palette=self.palette)
+
+
+NullRegImg = RegImg(Image.new("RGBA", (1, 1)), name="null", prepare_function=np.asarray)
