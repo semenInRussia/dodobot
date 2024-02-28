@@ -11,7 +11,7 @@ def rescroll() -> None:
 
 if __name__ == "__main__":
     while True:
+        rescroll()
         act = input("Enter Enter to rescroll, q to exit\n")
         if act == "q":
             break
-        rescroll()
