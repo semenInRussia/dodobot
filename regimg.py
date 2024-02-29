@@ -81,7 +81,7 @@ class Predicter:
             root += "/"
         files = os.listdir(root)
         files = filter(lambda f: f.endswith(".png"), files)
-        files = map(lambda f: root + f, files)
+        files = (root + f for f in files)
         regimgs = map(RegImg.from_filename, files)
         return cls(regimgs)
 

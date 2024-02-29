@@ -9,7 +9,7 @@ words: set[str] = set()
 
 def sync_words_with_dict(path="dict.txt") -> None:
     global words
-    with open(path, "r") as f:
+    with open(path) as f:
         words = set(map(str.strip, f))
 
 
@@ -80,7 +80,7 @@ def search(
     shuffle=False,
     ignored_words: Optional[Iterable[str]] = None,
 ) -> list[WordPath]:
-    global _checked_words, _used, _table, _paths
+    global _checked_words, _table, _paths
 
     _checked_words = set()
 
@@ -123,18 +123,16 @@ def _is_word_exists(wrd: str) -> bool:
     if len(wrd) <= 1:
         return False
 
-    if wrd in words:
-        return True
-
     if wrd[-2] in "уеыаоэяиюйъ":
         return False
 
-    # match cases like "брелке" "брелки"
-    if wrd[-2] == "к" and wrd[-1] in "еиа" and (wrd[:-2] + "ок") in words:
-        return True
-
-    # match cases like отцы
-    if wrd[-2] == "ц" and wrd[-1] in "ыаеу" and (wrd[:-2] + "ец") in words:
+    if (
+        wrd in words
+        # match cases like "брелке" "брелки"
+        or (wrd[-2] == "к" and wrd[-1] in "еиа" and (wrd[:-2] + "ок") in words)
+        # match cases like отцы
+        or (wrd[-2] == "ц" and wrd[-1] in "ыаеу" and (wrd[:-2] + "ец") in words)
+    ):
         return True
 
     # check the other forms of the given words:
@@ -145,7 +143,7 @@ def _is_word_exists(wrd: str) -> bool:
     if wrd[-1] in "ыуеи":
         wrd = wrd[:-1]
         ws = wrd, wrd + "а", wrd + "е", wrd + "о", wrd + "ь"
-        return any(map(lambda w: w in words, ws))
+        return any(map(lambda w: w in words, ws))  # noqa
 
     return False
 

@@ -12,16 +12,15 @@ BLACK = (0, 0, 0, 255)
 
 N = 5
 
-
 Rect = tuple[int, int, int, int]
 
 
-def read_palette(filename: str) -> list[Color]:
-    pal = []
+def read_palette(filename: str) -> Palette:
+    pal: Palette = []
     with open(filename) as f:
         for row in f:
-            col = map(lambda s: int(s.strip()), row.split(","))
-            pal.append(tuple(col))
+            col = (int(s.strip()) for s in row.split(","))
+            pal.append(tuple(col))  # type: ignore
     return pal
 
 
@@ -70,11 +69,10 @@ def add_padding(img: Image.Image, pad: int, bg) -> Image.Image:
 
 
 def _crop_region_with_colors(img: Image.Image, colors: list[Color]) -> Rect:
-    """Find the biggest image region which contains all pixels with
-    the given colors.
+    """Find the biggest image region which contains all colors.
 
-    Return the tuple (left, upper, right, down) of this image"""
-
+    Return the tuple (left, upper, right, down) of this image
+    """
     img = img.convert(mode="RGBA")
     a = np.array(img)
     r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
@@ -104,8 +102,6 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
 if __name__ == "__main__":
     root = "regimgs.ilya/"
     palette = read_palette("regimgs.ilya/palette")
-    # root = "regimgs/"
-    # palette = read_palette("regimgs/palette")
 
     print(palette)
 

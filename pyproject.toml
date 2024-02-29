@@ -4,11 +4,24 @@ description = "a bot to solve dodo game to win pizza"
 license = "MIT"
 authors = ["semenInRussia"]
 
+[tool.ruff]
+select = [
+  "F", "E", "W", "I", "N", "D", "UP", "S", "B", "A", "C4", "SLF", "SIM",
+  "ARG", "PL", "TRY", "NPY"
+] # almost max
+ignore = [
+  # blank lines incompatible
+  "D203", "D213",
+  # undocmentated method, function, class and etc.
+  "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107",
+  # asserts
+  "S101",
+  # global keyword
+  "PLW0603", "PLW0602"
+]
+
 [tool.poetry]
 include = ["dict.txt"]
 
 [tool.poetry.scripts]
 game = "dodo.gamer:main"
-
-[tool.ruff]
-select = ["ALL"]

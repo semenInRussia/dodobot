@@ -6,6 +6,7 @@ from photo import Palette, Rect, add_padding, only_table_text, split_image_on_ro
 from worder import n
 
 filename = "monitor-1.png"
+WHITE_BG = 255
 
 _reader = easyocr.Reader(["ru"])
 
@@ -21,15 +22,18 @@ def extract_table(img: Image.Image, palette: Palette, show=False) -> list[str]:
         img.show()
 
     table = []
-    WHITE_BG = 255
 
     for img_row in split_image_on_rows(img, n):
-        img_row = add_padding(img_row, 60, WHITE_BG)
-        row_txt = _extract_text(img_row)
-        row_txt = row_txt.replace(" ", "").replace("\n", "").lower()
-        table.append(row_txt.ljust(n, "."))
+        row_txt = _extract_text(add_padding(img_row, 60, WHITE_BG))
+        row_txt = _remove_whitespaces(row_txt).lower()
+        row_txt = row_txt.ljust(n, ".")  # add dots . to make row with needed width
+        table.append(row_txt)
 
     return table
+
+
+def _remove_whitespaces(s: str):
+    return s.replace(" ", "").replace("\n", "")
 
 
 def _extract_text(img: Image.Image) -> str:
@@ -48,7 +52,3 @@ def _extract_text(img: Image.Image) -> str:
         .replace("7", "п")
     )
     return txt
-
-
-# if __name__ == "__main__":
-# print(extract_table(Image.open(filename), show=True))

@@ -2,7 +2,7 @@ import time
 import traceback
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Iterator
+from typing import Iterator, Union
 
 import pyautogui as pg
 from PIL import Image
@@ -38,15 +38,11 @@ _rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
 
 
 def _is_ok_start_word(w: str) -> bool:
-    return len(w) == 5 and "ь" not in w and "ё" not in w
+    return len(w) == n and "ь" not in w and "ё" not in w
 
 
-def start_words():
-    sw = []
-
-    for w in worder.words:
-        if _is_ok_start_word(w):
-            sw.append(w)
+def start_words() -> Iterator[str]:
+    sw = [w for w in worder.words if _is_ok_start_word(w)]
 
     while True:
         yield from sw
@@ -62,11 +58,11 @@ def _row_words_paths() -> Iterable[WordPath]:
 
 def _row_word_path(i: int) -> WordPath:
     """Return a word path from the left cell to right cell of i-th row."""
-    return list(map(lambda j: (i, j), range(n)))
+    return list(map(lambda j: (i, j), range(n)))  # noqa
 
 
 class Gamer:
-    _screen: Image.Image | None = None
+    _screen: Union[Image.Image, None] = None
 
     # for round playing
     _table: list[str] | None = None
@@ -188,14 +184,14 @@ class Gamer:
             self._press_word(p)
 
     def reset(self) -> None:
-        """Mark some variables as non-actual"""
+        """Mark some variables as non-actual."""
         print("reset")
         self._screen = None
         self._table = None
         self._table_box = None
 
     def fill(self) -> None:
-        """Fill an empty table at the screen with letters"""
+        """Fill an empty table at the screen with letters."""
         for i in range(n):
             wrd = next(self._wrds)
             for j, ch in enumerate(wrd):
@@ -261,7 +257,7 @@ class Gamer:
     @property
     def table_box(self) -> Rect:
         """Return the box of a letter table at the screen."""
-        assert self._table_box != None
+        assert self._table_box is not None
         return self._table_box  # type: ignore
 
     @property
@@ -273,7 +269,8 @@ class Gamer:
     def _extract_table(self) -> None:
         """Extract from the screen a letter table and return nothing.
 
-        Save the result into the respective variables."""
+        Save the result into the respective variables.
+        """
         print("extract table")
 
         img = self.screen.crop(self.table_box)
@@ -304,7 +301,8 @@ class Gamer:
     def _cell_sizes(self) -> tuple[int, int]:
         """Get a tuple from table cell sizes.
 
-        The first element is horizontal size, the second is vertical"""
+        The first element is horizontal size, the second is vertical
+        """
         w, h = self.table_image_size
         return w // n, h // n
 
