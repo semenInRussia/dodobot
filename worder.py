@@ -80,7 +80,7 @@ def search(
     shuffle=False,
     ignored_words: Optional[Iterable[str]] = None,
 ) -> list[WordPath]:
-    global _checked_words, _table, _paths
+    global _checked_words, _used, _table, _paths
 
     _checked_words = set()
 
@@ -120,34 +120,14 @@ def _show_checked_words():
 
 
 def _is_word_exists(wrd: str) -> bool:
-    if len(wrd) <= 1:
-        return False
-
-    if wrd[-2] in "уеыаоэяиюйъ":
-        return False
-
     if (
-        wrd in words
-        # match cases like "брелке" "брелки"
-        or (wrd[-2] == "к" and wrd[-1] in "еиа" and (wrd[:-2] + "ок") in words)
-        # ши и жи
-        or (wrd[-2] in "шж" and wrd[-1] in "иеа" and wrd[:-1] in words)
-        # match cases like отцы
-        or (wrd[-2] == "ц" and wrd[-1] in "ыаеу" and (wrd[:-2] + "ец") in words)
+        len(wrd) >= 3
+        and wrd[-1] in "еуюиы"
+        and wrd[-2] not in "яуйцеъыаоэяию"
+        and wrd[:-1] in words
     ):
         return True
-
-    # check the other forms of the given words:
-    #
-    # the following code also return True for things like:
-    # кокосы - because кокос is exists
-    # сосне - because сосна is exists
-    if wrd[-1] in "ыуеи":
-        wrd = wrd[:-1]
-        ws = wrd, wrd + "а", wrd + "е", wrd + "о", wrd + "ь"
-        return any(map(lambda w: w in words, ws))  # noqa
-
-    return False
+    return wrd in words
 
 
 def _dfs(i: int, j: int, path: WordPath, word: str):
