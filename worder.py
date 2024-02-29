@@ -130,6 +130,8 @@ def _is_word_exists(wrd: str) -> bool:
         wrd in words
         # match cases like "брелке" "брелки"
         or (wrd[-2] == "к" and wrd[-1] in "еиа" and (wrd[:-2] + "ок") in words)
+        # ши и жи
+        or (wrd[-2] in "шж" and wrd[-1] in "иеа" and wrd[:-1] in words)
         # match cases like отцы
         or (wrd[-2] == "ц" and wrd[-1] in "ыаеу" and (wrd[:-2] + "ец") in words)
     ):
