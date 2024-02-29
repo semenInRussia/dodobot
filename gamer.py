@@ -195,7 +195,7 @@ class Gamer:
         for i in range(n):
             wrd = next(self._wrds)
             for j, ch in enumerate(wrd):
-                clicklib.click(self._cell_position(i, j))
+                clicklib.click(*self._cell_position(i, j))
                 _press_rus_char(ch)
 
     def _handle_regimg(self, ri: regimg.RegImg, scr: Image.Image | None = None):
@@ -210,7 +210,7 @@ class Gamer:
             "who",
             "winner",
         ]:
-            clicklib.click(ri.points[0])
+            clicklib.click(*ri.points[0])
 
         elif ev == "round1help1":
             clicklib.mouse_down()
@@ -230,7 +230,7 @@ class Gamer:
         elif ev == "wordchoose":
             _, _, xy = ri.points
             for _ in range(WORDCHOOSE_SCREENS_AMOUNT):
-                clicklib.click(xy)
+                clicklib.click(*xy)
                 if scr is not None:
                     self.save_recommended_word_to_dict(ri, screen())
 
@@ -320,7 +320,7 @@ class Gamer:
     def _press_word(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
         print(f"press a word ({len(path)})")
-        clicklib.click(self._cell_position(*path[0]))
+        clicklib.click(*self._cell_position(*path[0]))
         clicklib.mouse_down()
         for i, j in path:
             self._move_cursor_to_cell(i, j)

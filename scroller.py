@@ -4,7 +4,7 @@ SCROLL_POSITION = (1400, 600)
 
 
 def rescroll() -> None:
-    clicklib.click(SCROLL_POSITION)
+    clicklib.click(*SCROLL_POSITION)
     clicklib.scroll(10)
     clicklib.scroll(-1)
 
