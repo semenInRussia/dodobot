@@ -7,5 +7,8 @@ pyautogui
 # work with images (of course)
 pillow
 
+# arrays with C++ fast (this is a dependency of other packages too)
+numpy
+
 # screenshots
 mss
