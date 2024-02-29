@@ -1,0 +1,14 @@
+name = "dodo"
+version = "0.1.0"
+description = "a bot to solve dodo game to win pizza"
+license = "MIT"
+authors = ["semenInRussia"]
+
+[tool.poetry]
+include = ["dict.txt"]
+
+[tool.poetry.scripts]
+game = "dodo.gamer:main"
+
+[tool.ruff]
+select = ["ALL"]

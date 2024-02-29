@@ -329,8 +329,7 @@ class Gamer:
         clicklib.mouse_up()
 
 
-g = None
-if __name__ == "__main__":
+def main() -> None:
     time.sleep(1)
     g = Gamer()
     while True:
@@ -342,3 +341,7 @@ if __name__ == "__main__":
             _ = input("press Enter to continue")
         except:
             print(traceback.format_exc())
+
+
+if __name__ == "__main__":
+    main()
