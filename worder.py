@@ -121,7 +121,7 @@ def _show_checked_words():
 
 def _is_word_exists(wrd: str) -> bool:
     if (
-        len(wrd) >= 3
+        len(wrd) >= 3  # noqa
         and wrd[-1] in "еуюиы"
         and wrd[-2] not in "яуйцеъыаоэяию"
         and wrd[:-1] in words
