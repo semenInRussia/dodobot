@@ -99,9 +99,15 @@ def prepare_image(
 ) -> np.ndarray:
     if palette is None:
         palette = photo.read_palette("regimgs/palette")
-    box = photo.extract_region_with_palette(img, palette)
 
-    img = img.crop(box)
+    try:
+        box = photo.extract_region_with_palette(img, palette)
+    except ValueError:
+        # don't cut the image
+        pass
+    else:
+        img = img.crop(box)
+
     img = img.convert("L")
 
     return np.array(img)
