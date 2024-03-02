@@ -100,8 +100,8 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    root = "regimgs.ilya/"
-    palette = read_palette("regimgs.ilya/palette")
+    root = "regimgs.il/"
+    palette = read_palette("regimgs.il/palette")
 
     print(palette)
 
