@@ -127,7 +127,7 @@ def _is_word_exists(wrd: str) -> bool:
         and wrd[:-1] in words
     ):
         return True
-    return wrd in words
+    return len(wrd) > 1 and wrd in words
 
 
 def _dfs(i: int, j: int, path: WordPath, word: str):
