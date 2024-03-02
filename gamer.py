@@ -20,6 +20,7 @@ from worder import WordPath, n, save_word_to_dict, search, trim_dict
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=4)
 RESTART_INTERVAL = timedelta(minutes=40)
 PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=47)
+FULL_ROUND_TIME = timedelta(minutes=3)
 
 WORDCHOOSE_SCREENS_AMOUNT = 10
 
@@ -168,6 +169,9 @@ class Gamer:
                 row_paths_used = True
                 self._press_row_words()
 
+            if round_time >= FULL_ROUND_TIME:
+                return
+
             if last_cell in p:
                 last_cell_paths.append(p)
             else:
@@ -177,6 +181,9 @@ class Gamer:
             self._press_row_words()
 
         for p in last_cell_paths:
+            round_time = datetime.now() - round_start
+            if round_time > FULL_ROUND_TIME:
+                return
             self._press_word(p)
 
     def _press_row_words(self) -> None:
