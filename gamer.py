@@ -18,7 +18,7 @@ from tsrct import extract_table, read_text_at_img_fragment
 from worder import WordPath, n, save_word_to_dict, search, trim_dict
 
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=4)
-RESTART_INTERVAL = timedelta(minutes=40)
+RELOAD_PAGE_INTERVAL = timedelta(minutes=40)
 PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=47)
 FULL_ROUND_TIME = timedelta(minutes=3)
 
@@ -85,12 +85,12 @@ class Gamer:
     def _rescroll():
         rescroll()
 
-    def _restart_if_time_is_come(self) -> None:
+    def _reload_page_if_time_is_come(self) -> None:
         uptime = datetime.now() - self._last_reboot_time
-        if uptime > RESTART_INTERVAL:
-            self.restart()
+        if uptime > RELOAD_PAGE_INTERVAL:
+            self.reload_page()
 
-    def restart(self):
+    def reload_page(self):
         self.reset()
         rescroll()
         pg.hotkey("ctrl", "r")
@@ -117,7 +117,7 @@ class Gamer:
                 and datetime.now() - event_handle_start_time
                 >= ONE_EVENT_HANDLE_MAX_TIME
             ):
-                self.restart()
+                self.reload_page()
                 event_handle_start_time = datetime.now()
 
             if prev != p.name:
@@ -225,7 +225,7 @@ class Gamer:
             clicklib.mouse_up()
 
         elif ev == "help":
-            self.restart()
+            self.reload_page()
 
         elif ev == "playing":
             top_left = ri.points[0]
@@ -243,7 +243,7 @@ class Gamer:
 
         if ev == "winner":
             trim_dict()
-            self._restart_if_time_is_come()
+            self._reload_page_if_time_is_come()
 
     def save_recommended_word_to_dict(self, ri: regimg.RegImg, scr: Image.Image):
         top_left, bottom_right, _ = ri.points
