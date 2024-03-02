@@ -76,14 +76,14 @@ class Predicter:
         self._ris = list(regimgs)
 
     @classmethod
-    def from_directory(cls, root: str):
+    def from_directory(cls, root: str, *args, **kwargs):
         if not root.endswith("/"):
             root += "/"
         files = os.listdir(root)
         files = filter(lambda f: f.endswith(".png"), files)
         files = (root + f for f in files)
         regimgs = map(RegImg.from_filename, files)
-        return cls(regimgs)
+        return cls(regimgs, *args, **kwargs)
 
     def predict(self, img: Image.Image) -> RegImg:
         if self._prepare_function:
