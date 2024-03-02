@@ -120,11 +120,14 @@ def _show_checked_words():
 
 
 def _is_word_exists(wrd: str) -> bool:
+    # 1. check the forms of wrd, remove the ending and check the word
+    # before it, if exists that word is also exist
     if (
         len(wrd) >= 3  # noqa
-        and wrd[-1] in "еуюиы"
-        and wrd[-2] not in "яуйцеъыаоэяию"
-        and wrd[:-1] in words
+        and wrd[-1] in "еуюиы"  # the last letter is ok ending
+        and wrd[-2] not in "яуйцеъыаоэяию"  # the pre-last letter is ok with ending
+        # the word without ending is ok
+        and (wrd[:-1] in words or any((wrd[:-1] + end in words) for end in "яаь"))
     ):
         return True
     return len(wrd) > 1 and wrd in words
