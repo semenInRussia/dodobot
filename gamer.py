@@ -14,7 +14,7 @@ import worder
 from photo import Rect
 from screener import screen
 from scroller import rescroll
-from tsrct import extract_table, read_text_at_img_fragment
+from vision import extract_table, read_text_at_img_fragment
 from worder import WordPath, n, save_word_to_dict, search, trim_dict
 
 ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=4)
@@ -163,31 +163,35 @@ class Gamer:
         last_cell = 0, 0  # cell which bot will visit the last
         last_cell_paths = []
 
-        for p in paths:
-            # if playing time is up, mark all symbols to do x2
+        for w in paths:
+            # if playing time is almost over, mark all symbols to do
+            # x2
+            #
+            # strategy to mark ALL symbols is that make rows words and
+            # mark them at the end
             round_time = datetime.now() - round_start
             if not row_paths_used and round_time >= PLAYING_ROUND_TIME:
                 row_paths_used = True
-                self._press_row_words()
+                self._press_row_paths()
 
             if round_time >= FULL_ROUND_TIME:
                 return
 
-            if last_cell in p:
-                last_cell_paths.append(p)
+            if last_cell in w:
+                last_cell_paths.append(w)
             else:
-                self._press_word(p)
+                self._press_word(w)
 
         if not row_paths_used:
-            self._press_row_words()
+            self._press_row_paths()
 
-        for p in last_cell_paths:
+        for w in last_cell_paths:
             round_time = datetime.now() - round_start
             if round_time > FULL_ROUND_TIME:
                 return
-            self._press_word(p)
+            self._press_word(w)
 
-    def _press_row_words(self) -> None:
+    def _press_row_paths(self) -> None:
         for p in _row_words_paths():
             self._press_word(p)
 
@@ -251,8 +255,6 @@ class Gamer:
         box = (*top_left, *bottom_right)
         word = read_text_at_img_fragment(scr, box).lower().strip()
         if word != WORDCHOOSE_LABEL_TEXT:
-            # gamer will sync the dict after winner with 30% change, so
-            # now sync=False
             save_word_to_dict(word, show=True)
 
     @property
