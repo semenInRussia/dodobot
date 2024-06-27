@@ -80,6 +80,29 @@ def search(
     shuffle=False,
     ignored_words: Optional[Iterable[str]] = None,
 ) -> list[WordPath]:
+    """Search in the table of letters all existing words.
+
+    Word can be selected starting from any letter and continue to
+    next letter with each of possible sides (including diagonals).
+
+    For example in this table:
+
+    cat
+    ddr
+
+    You can chose words cat or car (maybe also other words are exist)
+
+    Return the list of paths where each of them is list of coordinates in
+    the table, every path is represents any word.
+
+    If ignored_words is True, don't return their paths if they are
+    exists in the table
+
+    If show is True, debug the words we search
+
+    If shuffle is True, shuffle the order of resulting paths.  The
+    default order is order how words are go when use `dfs`.
+    """
     global _checked_words, _used, _table, _paths
 
     _checked_words = set()
@@ -93,12 +116,11 @@ def search(
     for i in range(n):
         for j in range(n):
             path = [(i, j)]
-            _fill_matrix(_used, False)
             _dfs(i, j, path=path, word="")
 
-    # at start the function I added these words as checked, because
-    # need to ignore them, but now they marked as checked that is a
-    # confusion
+    # at the beginning of the function I added these words as checked,
+    # because need to ignore them, but now they marked as checked that
+    # is a confusion
     if ignored_words:
         for w in ignored_words:
             _checked_words.discard(w)
@@ -158,16 +180,6 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
     _used[i][j] = False
 
 
-# inplace
-def _fill_matrix(m: list[list], val):
-    if not m:
-        return
-
-    for i in range(len(m)):
-        for j in range(len(m[0])):
-            m[i][j] = val
-
-
 if __name__ == "__main__":
     tbl = [
         "бвгде",
@@ -176,7 +188,7 @@ if __name__ == "__main__":
         "нопст",
         "фхцшщ",
     ]
-    path = [(0, 1)]
     paths = search(tbl, show=True, ignored_words=["лизун"])
     for p in paths:
         print(p)
+    print(f"Found {len(paths)} words")
