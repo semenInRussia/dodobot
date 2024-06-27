@@ -10,14 +10,14 @@ from PIL import Image
 import clicklib
 import photo
 import regimg
+import vision
 import worder
 from photo import Rect
 from screener import screen
 from scroller import rescroll
-from vision import extract_table, read_text_at_img_fragment
 from worder import WordPath, n, save_word_to_dict, search, trim_dict
 
-ONE_EVENT_HANDLE_MAX_TIME = timedelta(minutes=4)
+SAME_SCENES_MAX_PROCESS_TIME = timedelta(minutes=4)
 RELOAD_PAGE_INTERVAL = timedelta(minutes=40)
 PLAYING_ROUND_TIME = timedelta(minutes=2, seconds=47)
 FULL_ROUND_TIME = timedelta(minutes=3)
@@ -25,7 +25,7 @@ FULL_ROUND_TIME = timedelta(minutes=3)
 WORDCHOOSE_SCREENS_AMOUNT = 10
 
 DURATION = 0.01
-EVENTS_SLEEP_TIME = 2
+TIMEOUT_BETWEEN_SCENES = 2
 RELOAD_PAGE_TIME = 60
 
 WORDCHOOSE_LABEL_TEXT = "впиши слово"
@@ -82,9 +82,92 @@ class Gamer:
         self._predicter = predicter or regimg.GamePredicter.from_directory("regimgs")
         self._palette = palette or photo.read_palette("regimgs/palette")
 
-    @staticmethod
-    def _rescroll():
-        rescroll()
+    def reset(self) -> None:
+        """Mark some variables as non-actual.
+
+        MUST be called before every scene.
+        """
+        print("reset")
+        self._screen = None
+        self._table = None
+        self._table_box = None
+
+    def start(self):
+        """Start work, endless gaming to the Dodo Game."""
+        prev = None
+        same_scenes_start_time = datetime.now()
+
+        while True:
+            time.sleep(TIMEOUT_BETWEEN_SCENES)
+            self.reset()
+            scene = self._predict_scene(self.screen)
+            print(f"Give a new scene: {scene.name}")
+
+            if prev == "playing" and scene.name == "playing":
+                # don't play twice at the same round
+                continue
+
+            if (
+                prev == scene.name
+                and datetime.now() - same_scenes_start_time
+                >= SAME_SCENES_MAX_PROCESS_TIME
+            ):
+                self.reload_page()
+                same_scenes_start_time = datetime.now()
+
+            if prev != scene.name:
+                same_scenes_start_time = datetime.now()
+
+            self._handle_scene(scene, self.screen)
+            prev = scene.name
+
+    def _predict_scene(self, img: Image.Image) -> regimg.RegImg:
+        try:
+            s = self._predicter.predict(img)
+        except ValueError:
+            return regimg.NullRegImg
+        else:
+            return s
+
+    def _handle_scene(self, ri: regimg.RegImg, scr: Image.Image | None = None):
+        sc = ri.name
+
+        if sc in [
+            "disconnect",
+            "home",
+            "round1help2",
+            "roundend",
+            "start",
+            "who",
+            "winner",
+        ]:
+            clicklib.click(*ri.points[0])
+
+        elif sc == "round1help1":
+            clicklib.mouse_down()
+            pg.move(-200)
+            clicklib.mouse_up()
+
+        elif sc == "help":
+            self.reload_page()
+
+        elif sc == "playing":
+            top_left = ri.points[0]
+            bottom_right = ri.points[1]
+            self.reset()
+            self._table_box = (*top_left, *bottom_right)
+            self.play_round()
+
+        elif sc == "wordchoose":
+            _, _, xy = ri.points
+            for _ in range(WORDCHOOSE_SCREENS_AMOUNT):
+                clicklib.click(*xy)
+                if scr is not None:
+                    self.save_recommended_word_to_dict(ri, screen())
+
+        if sc == "winner":
+            trim_dict()
+            self._reload_page_if_time_is_come()
 
     def _reload_page_if_time_is_come(self) -> None:
         uptime = datetime.now() - self._last_reboot_time
@@ -99,46 +182,22 @@ class Gamer:
         time.sleep(60)
         self._rescroll()
 
-    def start(self):
-        prev = None
-        event_handle_start_time = datetime.now()
-
-        while True:
-            time.sleep(EVENTS_SLEEP_TIME)
-            self.reset()
-            p = self._predict_image(self.screen)
-            print(f"event: {p.name}")
-
-            if prev == "playing" and p.name == "playing":
-                # don't play twice at the same round
-                continue
-
-            if (
-                prev == p.name
-                and datetime.now() - event_handle_start_time
-                >= ONE_EVENT_HANDLE_MAX_TIME
-            ):
-                self.reload_page()
-                event_handle_start_time = datetime.now()
-
-            if prev != p.name:
-                event_handle_start_time = datetime.now()
-
-            self._handle_regimg(p, self.screen)
-            prev = p.name
-
-    def _predict_image(self, img: Image.Image) -> regimg.RegImg:
-        try:
-            p = self._predicter.predict(img)
-        except ValueError:
-            return regimg.NullRegImg
-        else:
-            return p
+    @staticmethod
+    def _rescroll():
+        rescroll()
 
     def play_round(self) -> None:
+        """Play the round, consider that this round is first.
+
+        Even if this round is second it's still works.  This must be
+        called only when the table of letters (maybe empty and without
+        letters) is visible
+        """
         round_start = datetime.now()
 
         # fill the table with letters
+        #
+        # table have rows, fill these rows with exiting words
         self.fill()
 
         # ignore all words which are rows in table, it useful for 1st
@@ -146,12 +205,13 @@ class Gamer:
         # x2 is guaranteed.  The main is to mark them at the end
         paths = search(self.table, shuffle=True, ignored_words=self.table)
 
-        # in this game if you mark all symbols in the first round,
-        # then instantly after you mark the last symbol from table,
-        # you automatically end the round, so better at beginning mark
-        # all words which don't includes a cell, after mark all which
-        # includes (in the first round is one word, after which round
-        # will be end)
+        # in this game if you select all symbols in the first round,
+        # then instantly after you select the last symbol from the
+        # table, the round will be automatically ended.  So better at
+        # the beginning select all words which don't includes the same
+        # cell, when bot selected them, it select also all row,
+        # because they are also words (see below), after select all
+        # words which include that symbol
 
         # sometimes needed to mark all row words.  I choose the row
         # words from the dict, so they must be exist words, above I
@@ -163,7 +223,7 @@ class Gamer:
         last_cell = 0, 0  # cell which bot will visit the last
         last_cell_paths = []
 
-        for w in paths:
+        for p in paths:
             # if playing time is almost over, mark all symbols to do
             # x2
             #
@@ -177,135 +237,19 @@ class Gamer:
             if round_time >= FULL_ROUND_TIME:
                 return
 
-            if last_cell in w:
-                last_cell_paths.append(w)
+            if last_cell in p:
+                last_cell_paths.append(p)
             else:
-                self._press_word(w)
+                self._press_word_path(p)
 
         if not row_paths_used:
             self._press_row_paths()
 
-        for w in last_cell_paths:
+        for p in last_cell_paths:
             round_time = datetime.now() - round_start
             if round_time > FULL_ROUND_TIME:
                 return
-            self._press_word(w)
-
-    def _press_row_paths(self) -> None:
-        for p in _row_words_paths():
-            self._press_word(p)
-
-    def reset(self) -> None:
-        """Mark some variables as non-actual."""
-        print("reset")
-        self._screen = None
-        self._table = None
-        self._table_box = None
-
-    def fill(self) -> None:
-        """Fill an empty table at the screen with letters."""
-        for i in range(n):
-            wrd = next(self._wrds)
-            for j, ch in enumerate(wrd):
-                clicklib.click(*self._cell_position(i, j))
-                _press_rus_char(ch)
-
-    def _handle_regimg(self, ri: regimg.RegImg, scr: Image.Image | None = None):
-        ev = ri.name  # type: ignore
-
-        if ev in [
-            "disconnect",
-            "home",
-            "round1help2",
-            "roundend",
-            "start",
-            "who",
-            "winner",
-        ]:
-            clicklib.click(*ri.points[0])
-
-        elif ev == "round1help1":
-            clicklib.mouse_down()
-            pg.move(-200)
-            clicklib.mouse_up()
-
-        elif ev == "help":
-            self.reload_page()
-
-        elif ev == "playing":
-            top_left = ri.points[0]
-            bottom_right = ri.points[1]
-            self.reset()
-            self._table_box = (*top_left, *bottom_right)
-            self.play_round()
-
-        elif ev == "wordchoose":
-            _, _, xy = ri.points
-            for _ in range(WORDCHOOSE_SCREENS_AMOUNT):
-                clicklib.click(*xy)
-                if scr is not None:
-                    self.save_recommended_word_to_dict(ri, screen())
-
-        if ev == "winner":
-            trim_dict()
-            self._reload_page_if_time_is_come()
-
-    def save_recommended_word_to_dict(self, ri: regimg.RegImg, scr: Image.Image):
-        top_left, bottom_right, _ = ri.points
-        box = (*top_left, *bottom_right)
-        word = read_text_at_img_fragment(scr, box).lower().strip()
-        if word != WORDCHOOSE_LABEL_TEXT:
-            save_word_to_dict(word, show=True)
-
-    @property
-    def table(self) -> list[str]:
-        """Return the content of a table at the screen."""
-        if self._table is None:
-            self._extract_table()
-        return self._table  # type: ignore
-
-    @property
-    def table_box(self) -> Rect:
-        """Return the box of a letter table at the screen."""
-        assert self._table_box is not None
-        return self._table_box  # type: ignore
-
-    @property
-    def table_start(self) -> tuple[int, int]:
-        """Return the position where a table at the screen is started."""
-        x0, y0, _, _ = self.table_box
-        return x0, y0
-
-    def _extract_table(self) -> None:
-        """Extract from the screen a letter table and return nothing.
-
-        Save the result into the respective variables.
-        """
-        print("extract table")
-
-        img = self.screen.crop(self.table_box)
-        self._table = extract_table(img, self._palette)
-
-        for row in self._table:
-            print(row)
-
-    @property
-    def screen(self) -> Image.Image:
-        """Return the screenshot image of the screen."""
-        if self._screen is None:
-            self._make_screen()
-        assert self._screen is not None
-        return self._screen
-
-    def _make_screen(self) -> None:
-        """Do a screenshot, save the result into the respective variable."""
-        print("make screen")
-        self._screen = screen()
-
-    @property
-    def table_image_size(self) -> tuple[int, int]:
-        x0, y0, x1, y1 = self.table_box
-        return x1 - x0, y1 - y0
+            self._press_word_path(p)
 
     @property
     def _cell_sizes(self) -> tuple[int, int]:
@@ -327,14 +271,94 @@ class Gamer:
             int(y0 + (i + 0.5) * vsz),  # y
         )
 
-    def _press_word(self, path: WordPath):
+    def _press_word_path(self, path: WordPath):
         """Press a word with the word path at the letter table at the screen."""
         print(f"press a word ({len(path)})")
         clicklib.click(*self._cell_position(*path[0]))
         clicklib.mouse_down()
         for i, j in path:
             self._move_cursor_to_cell(i, j)
-        clicklib.mouse_up()
+            clicklib.mouse_up()
+
+    def _press_row_paths(self) -> None:
+        for p in _row_words_paths():
+            self._press_word_path(p)
+
+    def fill(self) -> None:
+        """Fill an empty table at the screen with letters."""
+        for i in range(n):
+            wrd = next(self._wrds)
+            for j, ch in enumerate(wrd):
+                clicklib.click(*self._cell_position(i, j))
+                _press_rus_char(ch)
+
+    def save_recommended_word_to_dict(self, ri: regimg.RegImg, scr: Image.Image):
+        """Save a word, that game recommended to you into the dict.txt.
+
+        When you choose a word to game, the game recommend you to
+        choose any word, save this word to dict.txt.
+        """
+        top_left, bottom_right, _ = ri.points
+        box = (*top_left, *bottom_right)
+        word = vision.read_text_at_img_fragment(scr, box).lower().strip()
+        if word != WORDCHOOSE_LABEL_TEXT:
+            save_word_to_dict(word, show=True)
+
+    @property
+    def table(self) -> list[str]:
+        """Return the content of a table at the screen."""
+        if self._table is None:
+            self._extract_table()
+        return self._table  # type: ignore
+
+    @property
+    def table_box(self) -> Rect:
+        """Return the box of a letters table at the screen.
+
+        Box is boundaries of the object (left top and right bottom
+        coordinates).
+        """
+        assert (
+            self._table_box is not None
+        ), "_table_box (table's bounds) must saved right after _predict_scene"
+        return self._table_box  # type: ignore
+
+    @property
+    def table_start(self) -> tuple[int, int]:
+        """Return the position where a table at the screen is started."""
+        x0, y0, _, _ = self.table_box
+        return x0, y0
+
+    def _extract_table(self) -> None:
+        """Extract from the screen the letters table and return nothing.
+
+        Save the result into the respective variables.
+        """
+        print("extract table")
+
+        img = self.screen.crop(self.table_box)
+        self._table = vision.extract_table(img, self._palette)
+
+        for row in self._table:
+            print(row)
+
+    @property
+    def screen(self) -> Image.Image:
+        """Return the screenshot image of the screen."""
+        if self._screen is None:
+            self._make_screen()
+        assert self._screen is not None
+        return self._screen
+
+    def _make_screen(self) -> None:
+        """Do a screenshot, save the result into the respective variable."""
+        print("make screen")
+        self._screen = screen()
+
+    @property
+    def table_image_size(self) -> tuple[int, int]:
+        x0, y0, x1, y1 = self.table_box
+        return x1 - x0, y1 - y0
 
 
 def main() -> None:
