@@ -43,6 +43,7 @@ def _is_ok_start_word(w: str) -> bool:
 
 
 def start_words() -> Iterator[str]:
+    sw = list(filter(_is_ok_start_word, worder.words))
     sw = [w for w in worder.words if _is_ok_start_word(w)]
 
     while True:
@@ -344,7 +345,7 @@ def main() -> None:
             break
         except pg.FailSafeException:
             _ = input("press Enter to continue")
-        except:
+        except:  # noqa
             print(traceback.format_exc())
 
 
