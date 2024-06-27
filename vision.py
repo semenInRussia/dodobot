@@ -5,17 +5,21 @@ from PIL import Image
 from photo import Palette, Rect, add_padding, only_table_text, split_image_on_rows
 from worder import n
 
-filename = "monitor-1.png"
 WHITE_BG = 255
 
 _reader = easyocr.Reader(["ru"])
 
 
 def read_text_at_img_fragment(img: Image.Image, box: Rect):
+    """Read the text from the part of a given img."""
     return _extract_text(img.crop(box))
 
 
 def extract_table(img: Image.Image, palette: Palette, show=False) -> list[str]:
+    """Extract the letters table of the game using a palette .
+
+    Palette is list of Colors that you pick from DodoGame.
+    """
     img = only_table_text(img, palette)
 
     if show:

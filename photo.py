@@ -4,18 +4,46 @@ from typing import Iterator, Union
 import numpy as np
 from PIL import Image
 
+# RGBA or RGB
 Color = Union[tuple[int, int, int, int], tuple[int, int, int]]
+
+"""Palette is a list of colors that you can literally pick from
+DodoGame.
+
+The format of palette is the following:
+
+1. the first color is the color of the text in the letters table
+2. the second is any background of entire game canvas
+3. the second is another background
+4. and so on, and so on
+
+It can be used as argument in some functions, you can describe, read
+it in/from a file"""
 Palette = list[Color]
+
+Rect = tuple[int, int, int, int]
 
 WHITE = (255, 255, 255, 255)
 BLACK = (0, 0, 0, 255)
 
-N = 5
-
-Rect = tuple[int, int, int, int]
-
 
 def read_palette(filename: str) -> Palette:
+    """Read a palette from the given filename.
+
+    Palette is a list of colors (in this case background colors of the
+    game).  You must literally pick some colors of possible
+    backgrounds and locate it into file (./regimgs/palette).
+
+    The format of palette is the following:
+
+    1. the first color is the color of the text in the letters table
+    2. the second is any background of entire game canvas
+    3. the second is another background
+    4. and so on, and so on
+
+    Every color is represented with three integers divided by comma.
+    These integers are respective variables for RGB
+    """
     pal: Palette = []
     with open(filename) as f:
         for row in f:
@@ -100,8 +128,8 @@ def _remove_zeros(arr: np.ndarray) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    root = "regimgs.il/"
-    palette = read_palette("regimgs.il/palette")
+    root = "regimgs/"
+    palette = read_palette("regimgs/palette")
 
     print(palette)
 
