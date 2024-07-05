@@ -15,7 +15,7 @@ import worder
 from photo import Rect
 from screener import screen
 from scroller import rescroll
-from worder import WordPath, n, save_word_to_dict, search, trim_dict
+from worder import WordPath, N, save_word_to_dict, search, trim_dict
 
 SAME_SCENES_MAX_PROCESS_TIME = timedelta(minutes=4)
 RELOAD_PAGE_INTERVAL = timedelta(minutes=40)
@@ -39,7 +39,7 @@ _rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
 
 
 def _is_ok_start_word(w: str) -> bool:
-    return len(w) == n and "ь" not in w and "ё" not in w
+    return len(w) == N and "ь" not in w and "ё" not in w
 
 
 def start_words() -> Iterator[str]:
@@ -55,12 +55,12 @@ def _press_rus_char(ch: str) -> None:
 
 
 def _row_words_paths() -> Iterable[WordPath]:
-    return map(_row_word_path, range(n - 1, -1, -1))
+    return map(_row_word_path, range(N - 1, -1, -1))
 
 
 def _row_word_path(i: int) -> WordPath:
     """Return a word path from the left cell to right cell of i-th row."""
-    return list(map(lambda j: (i, j), range(n)))  # noqa
+    return [(i, j) for j in range(N)]
 
 
 class Gamer:
@@ -258,7 +258,7 @@ class Gamer:
         The first element is horizontal size, the second is vertical
         """
         w, h = self.table_image_size
-        return w // n, h // n
+        return w // N, h // N
 
     def _move_cursor_to_cell(self, i: int, j: int) -> None:
         clicklib.move(*self._cell_position(i, j), duration=DURATION)
@@ -286,7 +286,7 @@ class Gamer:
 
     def fill(self) -> None:
         """Fill an empty table at the screen with letters."""
-        for i in range(n):
+        for i in range(N):
             wrd = next(self._wrds)
             for j, ch in enumerate(wrd):
                 clicklib.click(*self._cell_position(i, j))

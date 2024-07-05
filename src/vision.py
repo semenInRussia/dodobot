@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 
 from photo import Palette, Rect, add_padding, only_table_text, split_image_on_rows
-from worder import n
+from worder import N
 
 WHITE_BG = 255
 
@@ -27,10 +27,10 @@ def extract_table(img: Image.Image, palette: Palette, show=False) -> list[str]:
 
     table = []
 
-    for img_row in split_image_on_rows(img, n):
+    for img_row in split_image_on_rows(img, N):
         row_txt = _extract_text(add_padding(img_row, 60, WHITE_BG))
         row_txt = _remove_whitespaces(row_txt).lower()
-        row_txt = row_txt.ljust(n, ".")  # add dots . to make row with needed width
+        row_txt = row_txt.ljust(N, ".")  # add dots . to make row with needed width
         table.append(row_txt)
 
     return table

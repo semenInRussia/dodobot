@@ -2,7 +2,7 @@ import random
 from collections.abc import Iterable
 from typing import Optional
 
-n = 5
+N = 5
 MAX_WORD_LEN = 7
 words: set[str] = set()
 
@@ -69,7 +69,7 @@ _deltas: list[Point] = [
 WordPath = list[Point]
 
 _checked_words: set[str] = set()
-_used: list[list[bool]] = [[False for _ in range(n)] for _ in range(n)]
+_used: list[list[bool]] = [[False for _ in range(N)] for _ in range(N)]
 _table: list[str] = []
 _paths: list[WordPath] = []
 
@@ -113,8 +113,8 @@ def search(
     _paths = []
     _table = table
 
-    for i in range(n):
-        for j in range(n):
+    for i in range(N):
+        for j in range(N):
             path = [(i, j)]
             _dfs(i, j, path=path, word="")
 
@@ -158,7 +158,7 @@ def _is_word_exists(wrd: str) -> bool:
 def _dfs(i: int, j: int, path: WordPath, word: str):
     global _checked_words, _used, _table, _paths
 
-    if i < 0 or i >= n or j < 0 or j >= n:
+    if i < 0 or i >= N or j < 0 or j >= N:
         return
     if _used[i][j]:
         return
