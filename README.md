@@ -1,10 +1,10 @@
 # Балда от Dodo Пиццы
 
-*решил сказать в начале.  Тут я буду писать код!!! и делать это на Python*
+*решил сказать в начале:  Тут я буду писать код!!! и делать это на Python*
 
 Как-то друг мне показал пост ВКонтакте из паблика Додо Пиццы.  Там говорилось как-то так
 
-> Мы запускаем нашу игру ["Балда"](https://vk.com/app51774407).  В течении (~месяца) за каждый матч вам будут начисляться очки.  Первые ~3 аккаунта в общем рейтинге получат годовой запас Пиццы.
+> Мы запускаем нашу игру ["Балда"](https://vk.com/app51774407).  В течении (~месяца) за каждый матч вам будут начисляться очки.  Первые 10 аккаунтов в общем рейтинге получат годовой запас Пиццы.
 
 Мой друг, мало разбирающийся в программировании, предложил мне написать Бота, играющий в их игрушку без вмешательства человека.  Сам он предложил запустить программу на его компе, у меня же чайник совсем, а не комп. Вот спустя неопределённый срок я сел делать бота.
 
@@ -14,9 +14,9 @@
 
 Кстати...  Если представители Додо читают это, то пожалуйста... не убивайте меня.
 
-Окей.  Дальше я буду описывать как я написал этого Франкинштейна.  Кстати писать статью я начал в ~июле 2024, спустя 4 месяца.
+Окей.  Дальше я буду описывать как я собрал это чудо.  Кстати писать статью я начал в ~июле 2024, спустя 4 месяца.
 
-Я давно читаю habr.  Статьи где люди пишут код мне ОЧЕНЬ нравятся, я от них прусь.  Только именно сейчас есть такая проблема.  Такие статьи интересные только ТОГДА, КОГДА автор описывает не просто буквы, которые он там когда-то напечатал, а когда автор рассказывает о всех трудностях, о всех свалившихся проблемах, когда вместе с автором думаешь над решением задачи.  Так вот, этот пост не такой, ну или вряд ли таким получится, хоть я буду стараться.  Код я писал *ОЧЕНЬ* давно, я нифера не помню
+Я давно читаю habr.  Статьи где люди пишут код мне ОЧЕНЬ нравятся, я от них прусь.  Только именно сейчас есть одна проблема.  Такие статьи интересные только ТОГДА, КОГДА автор описывает не просто буквы, которые он там когда-то напечатал, а когда автор рассказывает о всех трудностях, о всех свалившихся проблемах, когда вместе с автором думаешь над решением задачи.  Так вот, этот пост не такой, ну или вряд ли таким получится, хоть я буду стараться.  Код я писал *ОЧЕНЬ* давно, я нифера не помню, к тому же обладаю скудными навыками в составлении текстов
 
 Но перед кодом, хотя бы об игре расскажу
 
@@ -161,25 +161,8 @@ def screen() -> Image.Image:
 
 ```python
 def _cvt_img(img: Image.Image) -> Image.Image:
+    beg_col, beg_row, end_col, end_row = _img_box(img)
     w, h = img.size
-
-    # find min col and row where table text is started, defaults to
-    # maximum possible
-    beg_col = w
-    beg_row = h
-
-    # the same for col and row where it ended, defaults to min
-    # possible
-    end_col = 0
-    end_row = 0
-
-    for y in range(h):
-        for x in range(w):
-            if img.getpixel((x, y)) == TEXT_COLOR:
-                beg_col = min(beg_col, x)
-                beg_row = min(beg_row, y)
-                end_col = max(end_col, x)
-                end_row = max(end_row, y)
 
     # beg col is where the first table pixel, make it on 3 pixels lefter
     # the same for other bounds
@@ -200,6 +183,27 @@ def _cvt_img(img: Image.Image) -> Image.Image:
                 img.putpixel((i, j), WHITE)
 
     return img
+
+def _img_box(img: Image.Image):
+    # find min col and row where table text is started, defaults to
+    # maximum possible
+    beg_col = w
+    beg_row = h
+
+    # the same for col and row where it ended, defaults to min
+    # possible
+    end_col = 0
+    end_row = 0
+
+    for y in range(h):
+        for x in range(w):
+            if img.getpixel((x, y)) == TEXT_COLOR:
+                beg_col = min(beg_col, x)
+                beg_row = min(beg_row, y)
+                end_col = max(end_col, x)
+                end_row = max(end_row, y)
+
+    return beg_col, beg_row, end_col, end_row
 ```
 
 Замечу, что данный код может не совпадать с действительным, точнее он не совпадает в 100% случаев, здесь немного упрощённая, но рабочая версия
@@ -269,3 +273,224 @@ def split_image_on_rows(img: Image.Image, n: int) -> Iterator[Image.Image]:
 ```
 
 Вау!  Сейчас есть что-то на рабочий продукт: я запускаю программу, она делает скрин и ищет все слова, которые есть в таблице.  Но напомню, задача проекта ВЫИГРАТЬ пиццы.  Нужно, чтобы бот работал 24/7 желательно без участия человека, поэтому...
+
+## Автокликинг?
+
+Да, нейминг это сложно.  Это лучшее название для главы, которое я нашёл
+
+Следующую функцию, которую я захотел добавить стала функция самой игры.  То есть ожидается, что буду нажимать на кнопку и бот будет делать всё за нас.  На данный момент хватит того, что бот просто будет выделять слова, которые сам до этого нашёл.
+
+Идея простая(даже слишком):  найдём область таблицы, в которой находятся все буквы.  После буду просто выделять каждое слово, причём его путь мы знаем.  Осталось написать функцию, которая просто наводит курсор на нужную ячейку по координатам `x` и `y` относительно таблицы.  То есть `(0, 0)` чтобы выделить верхнюю правую ячейку.  Найти `x` и `y` относительно всего экрана тоже довольно легко.  Найду размер одной ячейки (длина таблицы делённая на 5) и перейду к точке (`x0`, `y0` - координаты левого верхнего угла таблицы, `v` и `h` - вертикальный и горизонтальный размер ячейки) `x0 + (i+0.5)*h; y0 + (j+0.5)*v` (`(i, j)` - координаты относительно таблицы)
+
+Здесь ещё стоит добавить некоторые функции, например, двойные очки дадут тогда и только тогда, когда все буквы в таблице были выделены до конца раунда, причём как это произойдёт игра сразу остановится.  Поэтому я сделал несколько вещей, чтобы увеличить "профит":
+
+1. Чтобы быть уверенным, что все буквы могут быть задействованы в игре, я заполню таблицу, так чтобы в каждой её строчке было слово
+
+![слова в таблице, существуют](./doc/schoor.png)
+
+2. Чтобы не выйти с раунда раньше его конца(случайно не использовать все буквы задолго до конца раунда), я не буду выделять все слова обладающие буквой в координате `(5, 5)`, тогда будет уверенность что хотя бы одна буква будет не задействована
+
+3. Когда я вижу, что раунд играется столько, что он уже скоро закончится, я сначала выделяю все строчки(которые также существующие слова), а потом начну выделять слова с `(0, 0)`
+
+Это наверное всё
+
+Код буду давать постепенно.  Изначально я создал класс `Gamer`.  На самом деле нет никаких стопроцентных причин использовать ООП, но я решил что так как программа будет обладать большим стейтом, то стоит может реализовать всё как методы класса, хоть можно было обойтись проще.
+
+```python
+Rect = tuple[int, int, int, int]
+
+class Gamer:
+    ...
+```
+
+Во многих функций мне нужен будет текущий(актуальный) скриншот экрана, таблица букв(если есть) и координаты этой таблице.  Добавлю соответственные поля и метод `reset`, чтобы показать что они больше не "свежые"
+
+```python
+    _screen: Union[Image.Image, None] = None
+    _table: list[str] | None = None
+    _table_box: Rect | None = None
+
+    def reset(self) -> None:
+        print("reset")
+        self._screen = None
+        self._table = None
+        self._table_box = None
+```
+
+Также допишу для них необходимые геттеры.  Кто-то скажит что это какой-то оверинжененг, но на Python я пишу так всегда, для меня такой подход легче.
+
+(идея геттеров возвращать *актуальный* скриншот, таблицу, ....  Если текущие значения полей свежие, то вернуть их.  Иначе пересчитать.  Это удобно, чтобы не делать несколько раз скриншот одного и того же экрана и не передавать `Image.Image` всем нуждающимся функциям)
+
+```python
+    @property
+    def screen(self) -> Image.Image:
+        if self._screen is None:
+            self._screen = screen()
+        assert self._screen is not None
+        return self._screen
+
+    @property
+    def table(self) -> list[str]:
+        if self._table is None:
+            self._extract_table()
+        return self._table
+
+    def _extract_table(self) -> None:
+        self._table_box = _img_box(self.screen)
+        self._table = extract_table(img)
+
+    @property
+    def table_box(self) -> Rect:
+        assert self._table_box is not None
+        return self._table_box
+
+
+```
+
+Несколько второстепенных функций, включая ту которая наводит курсор на нужную ячейку (кстати для неё я использовал Библиотеку `PyAutoGui`, которую могу посоветовать).
+
+```
+DURATION = 0.01
+import pyautogui as _pg
+
+    # ...
+
+    def _move_cursor_to_cell(self, i: int, j: int) -> None:
+        _pg.moveTo(*self._cell_position(i, j), duration=DURATION)
+
+    def _cell_position(self, i: int, j: int) -> tuple[int, int]:
+        hsz, vsz = self._cell_sizes
+        x0, y0, _, _ = self.table_box
+        return (
+            int(x0 + (j + 0.5) * hsz),  # x
+            int(y0 + (i + 0.5) * vsz),  # y
+        )
+
+    @property
+    def _cell_sizes(self) -> tuple[int, int]:
+        w, h = self.table_image_size
+        return w // N, h // N
+
+    @property
+    def table_image_size(self) -> tuple[int, int]:
+        x0, y0, x1, y1 = self.table_box
+        return x1 - x0, y1 - y0
+```
+
+следующая функция уже процесс самой игры.  думаю его я описывать подробно не буду, тем более есть комментарии(даже много)
+
+```python
+    def play_round(self) -> None:
+        round_start = datetime.now()
+        paths = search(self.table)
+        last_cell = 0, 0  # cell which bot will visit the last
+        last_cell_paths = []
+
+        for p in paths:
+            # if playing time is almost over, mark all symbols to do
+            # x2
+            #
+            # strategy to mark ALL symbols is that make rows words and
+            # mark them at the end
+            round_time = datetime.now() - round_start
+            if not row_paths_used and round_time >= PLAYING_ROUND_TIME:
+                row_paths_used = True
+                self._press_row_paths()
+
+            if round_time >= FULL_ROUND_TIME:
+                return
+
+            if last_cell in p:
+                last_cell_paths.append(p)
+            else:
+                self._press_word_path(p)
+
+        if not row_paths_used:
+            self._press_row_paths()
+
+        for p in last_cell_paths:
+            round_time = datetime.now() - round_start
+            if round_time > FULL_ROUND_TIME:
+                return
+            self._press_word_path(p)
+
+
+    def _press_word_path(self, path: WordPath):
+        """Press a word with the word path at the letter table at the screen."""
+        print(f"press a word ({len(path)})")
+        self._move_cursor_to_cell(*path[0])
+        _pg.mouseDown()
+        for i, j in path:
+            self._move_cursor_to_cell(i, j)
+            _pg.mouseUp()
+
+    def _press_row_paths(self) -> None:
+        for p in _row_words_paths():
+            self._press_word_path(p)
+```
+
+Замечательно! Бот может даже играть
+
+![video](./doc/video.png)
+
+Необходимо правда, ещё научить заполнять его слова.  Это просто.  Для этого создам метод `self.fill()`.  И буду вызывать его в начале `play_round()`
+
+``` python
+    def fill(self):
+        for i in range(N):
+            wrd = next(self._wrds)
+            for j, ch in enumerate(wrd):
+                self._move_cursor_to_cell(i, j)
+                _pg.click()
+                _press_rus_char(ch)
+```
+
+Как возможно вы видите, необходимо научиться печатать русские буквы.  Додо разрешает делать это при нажатии английских букв, но с Qwerty раскладкой, переводя на Русский.  То есть Qwertyu => Йцукенг
+
+```python
+rus_keyboard = "йцукенгшщзхъфывапролджэячсмитьбю"
+eng_keyboard = "qwertyuiop[]asdfghjkl;'zxcvbnm,."
+_rus_to_eng = dict(zip(rus_keyboard, eng_keyboard))
+
+def _press_rus_char(ch: str) -> None:
+    _pg.press(_rus_to_eng.get(ch, ""))
+```
+
+поэтому с `_wrds` (список возможных слов для старта) разобраться можно так :
+
+1. из всех слов оставит пятибуквенные
+2. из них убрать все с буквой Ё(потому что её напечатать нереально)
+
+```python
+def start_words() -> Iterator[str]:
+    sw = list(filter(_is_ok_start_word, worder.words))
+    sw = [w for w in worder.words if _is_ok_start_word(w)]
+
+    while True:
+        yield from sw
+
+def _is_ok_start_word(w: str) -> bool:
+    return len(w) == N and "ё" not in w
+
+```
+
+(вам не обязательно понимать весь код)
+
+и в `Gamer.__init__`:
+
+```python
+    def __init__(self):
+        self._wrds = start_words()
+```
+
+всё
+
+## Автоматизация всего, регулярная перезагрузка, самообучение, обход кое-каких ограничений, неожиданные трудности, результат, пожелания
+
+...
+
+когда я это пишу это предложение.  Файл уже весит 23Кб(без учёта картинок) и содержит 3516слов(до этого предложения).  Я думаю стоит заканчивать.
+
+Всё что есть в `h2` может я допишу если статья найдёт отклик.  Во потенциальной второй части я расскажу о помимо всего прочего о возможно революционном методе создания подобных ботов и о всех подводных камнях.  Но вероятнее статьи не будет.
+
+А пока я прощаюсь!  Напишите коммент о несостоятельности автора!
