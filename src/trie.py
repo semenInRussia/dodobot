@@ -1,4 +1,4 @@
-from typing import Iterator, Optional
+from typing import Iterable, Iterator, Optional
 
 class Trie:
     """The structure to store the list of strings.
@@ -19,36 +19,58 @@ class Trie:
 
     def add(self, s: str) -> None:
         """Add a string s to the set."""
-        v = 0
-        for ch in s:
-            if ch not in self.arr[v].to:
-                self.arr[v].to[ch] = len(self.arr)
-                self.arr.append(_Node())
-            v = self.arr[v].to[ch] or 0
-        self.size += 1
+        v = self._find_ptr(s, create=True)
+        assert v is not None
         self.arr[v].is_end = True
+        self.size += 1
+
+    def update(self, strings: Iterable[str]) -> None:
+        """Add all given strings to the set."""
+        for s in strings:
+            self.add(s)
+
+    def remove(self, s: str) -> bool:
+        """Remove the string s from the set.
+
+        If string was inside set, return True, otherwise False"""
+        v = self._find_ptr(s)
+        if v is None or not self.arr[v].is_end:
+            return False
+        self.arr[v].is_end = False
+        self.size -= 1
+        return True
+
+    def discard(self, strings: list[str]):
+        """Remove each of strings from the set."""
+        for s in strings:
+            self.remove(s)
 
     def __contains__(self, s: str) -> bool:
         """Check that string s is exists in the set of strings of Trie."""
-        v = 0
-        for ch in s:
-            assert v is not None
-            if ch not in self.arr[v].to:
-                return False
-            v = self.arr[v].to[ch]
-        assert v is not None
-        return self.arr[v].is_end
+        v = self._find_ptr(s)
+        return v is not None and self.arr[v].is_end
 
     def have_prefix(self, s: str) -> bool:
         """Check that string s is a prefix of any string in set."""
-        v = 0
+        return self._find_ptr(s) is not None
+
+    def _find_ptr(self, s: str, create: bool = False) -> Optional[int]:
+        """Return the index in self._arr to the string representation.
+
+        If s is not found, return None.  If create is True, when find
+        create the needed edges, so it creates the string and return
+        index"""
+        v: int = 0
         for ch in s:
-            assert v is not None
             if ch not in self.arr[v].to:
-                return False
-            v = self.arr[v].to[ch]
-        assert v is not None
-        return True
+                if create:
+                    self.arr[v].to[ch] = len(self.arr)
+                    self.arr.append(_Node())
+                else:
+                    return None
+            v = self.arr[v].to[ch] or -1
+        return v
+
 
     def __len__(self) -> int:
         return self.size
@@ -90,6 +112,10 @@ if __name__ == "__main__":
     assert t.have_prefix("a")
     assert "y" not in t
     assert not t.have_prefix("y")
+    assert t.remove("back")
+    assert "back" not in t
+    assert not t.remove("y")
+    assert "y" not in t
     print(list(t))
     assert len(t) == 3
     print("Tests are passed!")
