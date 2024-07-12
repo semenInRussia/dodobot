@@ -2,15 +2,17 @@ import random
 from collections.abc import Iterable
 from typing import Optional
 
+from trie import Trie
+
 N = 5
 MAX_WORD_LEN = 7
-words: set[str] = set()
+words: Trie = Trie()
 
 
 def sync_words_with_dict(path="dict.txt") -> None:
     global words
     with open(path) as f:
-        words = set(map(str.strip, f))
+        words = Trie(map(str.strip, f))
 
 
 def trim_dict(path="dict.txt", sync_words=True) -> None:
@@ -161,6 +163,9 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
     if i < 0 or i >= N or j < 0 or j >= N:
         return
     if _used[i][j]:
+        return
+
+    if not words.have_prefix(word):
         return
 
     word += _table[i][j]
