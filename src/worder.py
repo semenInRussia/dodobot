@@ -1,16 +1,19 @@
 import random
 from collections.abc import Iterable
+import time
 from typing import Optional
 
+from trie import Trie
+
 N = 5
-MAX_WORD_LEN = 7
-words: set[str] = set()
+MAX_WORD_LEN = 20
+words: Trie = Trie()
 
 
 def sync_words_with_dict(path="dict.txt") -> None:
     global words
     with open(path) as f:
-        words = set(map(str.strip, f))
+        words = Trie(map(str.strip, f))
 
 
 def trim_dict(path="dict.txt", sync_words=True) -> None:
@@ -163,6 +166,9 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
     if _used[i][j]:
         return
 
+    if not words.have_prefix(word):
+        return
+
     word += _table[i][j]
 
     if _is_word_exists(word) and word not in _checked_words:
@@ -188,7 +194,6 @@ if __name__ == "__main__":
         "нопст",
         "фхцшщ",
     ]
-    paths = search(tbl, show=True, ignored_words=["лизун"])
-    for p in paths:
-        print(p)
-    print(f"Found {len(paths)} words")
+    start = time.time()
+    paths = search(tbl, ignored_words=["лизун"])
+    print((time.time() - start) * 1000)
