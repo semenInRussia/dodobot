@@ -166,16 +166,13 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
     if _used[i][j]:
         return
 
-    if not words.have_prefix(word):
-        return
-
     word += _table[i][j]
 
     if _is_word_exists(word) and word not in _checked_words:
         _paths.append(path)
         _checked_words.add(word)
 
-    if len(word) == MAX_WORD_LEN:
+    if len(word) == MAX_WORD_LEN or not words.have_prefix(word):
         return
 
     _used[i][j] = True
@@ -188,12 +185,13 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
 
 if __name__ == "__main__":
     tbl = [
-        "бвгде",
-        "ёзилм",
-        "журка",
-        "нопст",
-        "фхцшщ",
+        "место",
+        "морда",
+        "надел",
+        "точка",
+        "надел",
     ]
     start = time.time()
     paths = search(tbl, ignored_words=["лизун"])
     print((time.time() - start) * 1000)
+    print(f"cnt = {len(_checked_words)}")
