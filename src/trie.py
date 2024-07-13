@@ -17,13 +17,6 @@ class Trie:
             for s in _arr:
                 self.add(s)
 
-    def clear(self) -> None:
-        """Remove all strings from the set.
-
-        But don't remove the Nodes from the trie, only mark every node as non-end"""
-        for i in range(len(self.arr)):
-            self.arr[i].is_end = False
-
     def add(self, s: str) -> None:
         """Add a string s to the set."""
         v = self._find_ptr(s, create=True)
@@ -46,11 +39,6 @@ class Trie:
         self.arr[v].is_end = False
         self.size -= 1
         return True
-
-    def discard(self, strings: Iterable[str]):
-        """Remove each of strings from the set."""
-        for s in strings:
-            self.remove(s)
 
     def __contains__(self, s: str) -> bool:
         """Check that string s is exists in the set of strings of Trie."""
@@ -119,10 +107,12 @@ if __name__ == "__main__":
     assert t.have_prefix("a")
     assert "y" not in t
     assert not t.have_prefix("y")
+    assert len(t) == 3
     assert t.remove("back")
+    assert len(t) == 2
     assert "back" not in t
     assert not t.remove("y")
+    assert len(t) == 2
     assert "y" not in t
     print(list(t))
-    assert len(t) == 3
     print("Tests are passed!")

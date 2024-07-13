@@ -71,7 +71,7 @@ _deltas: list[Point] = [
 
 WordPath = list[Point]
 
-_checked_words: Trie = Trie()
+_checked_words: set = set()
 _used: list[list[bool]] = [[False for _ in range(N)] for _ in range(N)]
 _table: list[str] = []
 _paths: list[WordPath] = []
@@ -125,7 +125,8 @@ def search(
     # because need to ignore them, but now they marked as checked that
     # is a confusion
     if ignored_words:
-        _checked_words.discard(ignored_words)
+        for w in ignored_words:
+            _checked_words.remove(w)
 
     if shuffle:
         random.shuffle(_paths)
