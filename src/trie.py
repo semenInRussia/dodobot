@@ -17,6 +17,13 @@ class Trie:
             for s in _arr:
                 self.add(s)
 
+    def clear(self) -> None:
+        """Remove all strings from the set.
+
+        But don't remove the Nodes from the trie, only mark every node as non-end"""
+        for i in range(len(self.arr)):
+            self.arr[i].is_end = False
+
     def add(self, s: str) -> None:
         """Add a string s to the set."""
         v = self._find_ptr(s, create=True)
@@ -40,7 +47,7 @@ class Trie:
         self.size -= 1
         return True
 
-    def discard(self, strings: list[str]):
+    def discard(self, strings: Iterable[str]):
         """Remove each of strings from the set."""
         for s in strings:
             self.remove(s)

@@ -71,7 +71,7 @@ _deltas: list[Point] = [
 
 WordPath = list[Point]
 
-_checked_words: set[str] = set()
+_checked_words: Trie = Trie()
 _used: list[list[bool]] = [[False for _ in range(N)] for _ in range(N)]
 _table: list[str] = []
 _paths: list[WordPath] = []
@@ -108,7 +108,7 @@ def search(
     """
     global _checked_words, _used, _table, _paths
 
-    _checked_words = set()
+    _checked_words.clear()
 
     if ignored_words:
         _checked_words.update(ignored_words)
@@ -125,8 +125,7 @@ def search(
     # because need to ignore them, but now they marked as checked that
     # is a confusion
     if ignored_words:
-        for w in ignored_words:
-            _checked_words.discard(w)
+        _checked_words.discard(ignored_words)
 
     if shuffle:
         random.shuffle(_paths)
@@ -185,13 +184,14 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
 
 if __name__ == "__main__":
     tbl = [
-        "место",
-        "морда",
-        "надел",
-        "точка",
-        "надел",
+        "сково",
+        "морор",
+        "надео",
+        "точкд",
+        "надае",
     ]
     start = time.time()
-    paths = search(tbl, ignored_words=["лизун"])
+    print(len(words.arr))
+    paths = search(tbl, show=True, ignored_words=["лизун"])
     print((time.time() - start) * 1000)
     print(f"cnt = {len(_checked_words)}")
