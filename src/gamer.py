@@ -15,7 +15,7 @@ import worder
 from photo import Rect
 from screener import screen
 from scroller import rescroll
-from worder import WordPath, N, save_word_to_dict, search, trim_dict
+from worder import WordPath, N, save_word_to_dict, search, sync_words_with_dict
 
 SAME_SCENES_MAX_PROCESS_TIME = timedelta(minutes=4)
 RELOAD_PAGE_INTERVAL = timedelta(minutes=40)
@@ -166,7 +166,7 @@ class Gamer:
                     self.save_recommended_word_to_dict(ri, screen())
 
         if sc == "winner":
-            trim_dict()
+            sync_words_with_dict()
             self._reload_page_if_time_is_come()
 
     def _reload_page_if_time_is_come(self) -> None:

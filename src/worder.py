@@ -13,7 +13,7 @@ words: Trie = Trie()
 def sync_words_with_dict(path="dict.txt") -> None:
     global words
     with open(path) as f:
-        words = Trie(map(str.strip, f))
+        words.update(map(str.strip, f))
 
 
 def trim_dict(path="dict.txt", sync_words=True) -> None:
@@ -185,14 +185,18 @@ def _dfs(i: int, j: int, path: WordPath, word: str):
 
 if __name__ == "__main__":
     tbl = [
-        "сково",
-        "морор",
-        "надео",
-        "точкд",
-        "надае",
+        "амогз",
+        "иурнш",
+        "удача",
+        "тостм",
+        "рмтьы",
     ]
     start = time.time()
     print(len(words.arr))
     paths = search(tbl, show=True, ignored_words=["лизун"])
+    m = (0, "") # length and word
+    for w in _checked_words:
+        m = max((len(w), w), m)
+    print(*m)
     print((time.time() - start) * 1000)
     print(f"cnt = {len(_checked_words)}")
