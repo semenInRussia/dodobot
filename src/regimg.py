@@ -1,5 +1,24 @@
+"""Implementations of Regular images and regular images for balda game.
+
+I consider regular image is template to check matching with a stock
+image.  Also regular image can provide needed positions on image to
+user.
+
+You have the class `RegImg` that accept its name, template image and
+prepare function, which will be applied to this template. Now you can
+pass any image and compute `match_value`: value from 0 to 1 that
+represents equality.  If the template have points where transparency
+is 0, it will be saved in points, you can use when get result from
+`Predicter`.
+
+You have the class `Predicter` which accept list of regular images and
+prepare function. Now you can pass an image and get the best regular
+image (who more matches)
+"""
+
 import os
-from typing import Callable, Iterator, Optional
+from collections.abc import Iterator
+from typing import Callable, Optional
 
 import numpy as np
 import pyautogui as pg

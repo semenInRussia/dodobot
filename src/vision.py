@@ -42,8 +42,7 @@ def _remove_whitespaces(s: str):
 
 def _extract_text(img: Image.Image) -> str:
     img = np.array(img)  # type: ignore
-    txt = _reader.readtext(img, detail=0)
-    txt = "".join(txt)
+    txt = "".join(_reader.readtext(img, detail=0))  # type: ignore
     txt = (
         txt.replace("0", "о")
         .replace("₽", "р")

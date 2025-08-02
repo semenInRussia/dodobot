@@ -16,6 +16,9 @@ def sync_words_with_dict(path="dict.txt") -> None:
         words.update(map(str.strip, f))
 
 
+sync_words_with_dict()
+
+
 def trim_dict(path="dict.txt", sync_words=True) -> None:
     if sync_words:
         sync_words_with_dict(path)
@@ -191,6 +194,7 @@ if __name__ == "__main__":
         "тостм",
         "рмтьы",
     ]
+
     start = time.time()
     print(len(words.arr))
     paths = search(tbl, show=True, ignored_words=["лизун"])
