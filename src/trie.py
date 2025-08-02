@@ -1,12 +1,17 @@
 from typing import Iterable, Iterator, Optional
 
-class Trie:
-    """The structure to store the list of strings.
 
-    Idea is that root is empty strings, every node of this root is the
-    first symbols of exists strings, their nodes are second
-    characters.  So every node represents a string, if its field
-    output is True, then this string is exists in the set"""
+class Trie:
+    """
+    The structure to store the list of strings.
+
+    Consider that list of strings is tree, idea is that root is empty
+    string, every node of this root is the first symbols of exists
+    strings, their nodes are second characters.  So every node
+    represents a string, if its field output is True, then this string
+    is exists in the set
+    """
+
     arr: list["_Node"]
     size: int
 
@@ -30,9 +35,11 @@ class Trie:
             self.add(s)
 
     def remove(self, s: str) -> bool:
-        """Remove the string s from the set.
+        """
+        Remove the string s from the set.
 
-        If string was inside set, return True, otherwise False"""
+        If string was inside set, return True, otherwise False
+        """
         v = self._find_ptr(s)
         if v is None or not self.arr[v].is_end:
             return False
@@ -50,11 +57,13 @@ class Trie:
         return self._find_ptr(s) is not None
 
     def _find_ptr(self, s: str, create: bool = False) -> Optional[int]:
-        """Return the index in self._arr to the string representation.
+        """
+        Return the index in self._arr of the string representation.
 
         If s is not found, return None.  If create is True, when find
         create the needed edges, so it creates the string and return
-        index"""
+        index
+        """
         v: int = 0
         for ch in s:
             if ch not in self.arr[v].to:
@@ -66,12 +75,12 @@ class Trie:
             v = self.arr[v].to[ch] or -1
         return v
 
-
     def __len__(self) -> int:
         return self.size
 
     def __iter__(self) -> Iterator[str]:
         return _dfs(self, 0, "")
+
 
 def _dfs(t: Trie, v: int, s: str) -> Iterator[str]:
     if t.arr[v].is_end:
@@ -83,12 +92,14 @@ def _dfs(t: Trie, v: int, s: str) -> Iterator[str]:
 
 class _Node:
     """Every Optional integer represent the index of the node in the Trie.arr."""
+
     to: dict[str, Optional[int]]
     is_end: bool
 
     def __init__(self, is_end: bool = False):
         self.to = {}
         self.is_end = is_end
+
 
 if __name__ == "__main__":
     t = Trie()

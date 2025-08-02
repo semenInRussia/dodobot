@@ -1,6 +1,6 @@
 import random
-from collections.abc import Iterable
 import time
+from collections.abc import Iterable
 from typing import Optional
 
 from trie import Trie
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     start = time.time()
     print(len(words.arr))
     paths = search(tbl, show=True, ignored_words=["лизун"])
-    m = (0, "") # length and word
+    m = (0, "")  # length and word
     for w in _checked_words:
         m = max((len(w), w), m)
     print(*m)
